@@ -21,10 +21,10 @@
             <div class="card-body p-4">
                 
                 <!-- Tip Button -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="mb-0">{% if pattern %}Edit Pola Shift{% else %}Tambah Pola Shift Baru{% endif %}</h5>
-                    <button type="button" class="btn btn-sm btn-info" id="tipBtn" data-expanded="false">
-                        💡 Tip
+                <div class="mb-4">
+                    <h5 class="mb-2">{% if pattern %}Edit Pola Shift{% else %}Tambah Pola Shift Baru{% endif %}</h5>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="tipBtn" data-expanded="false">
+                        Tip
                     </button>
                 </div>
                 
@@ -209,13 +209,19 @@
         if (tipContainer.style.display === 'none') {
             tipContainer.style.display = 'block';
             tipBtn.setAttribute('data-expanded', 'true');
+            tipBtn.classList.remove('btn-outline-info');
+            tipBtn.classList.add('btn-info');
             tipBtn.style.backgroundColor = '#0dcaf0';
+            tipBtn.style.borderColor = '#0dcaf0';
             tipBtn.style.color = 'white';
         } else {
             tipContainer.style.display = 'none';
             tipBtn.setAttribute('data-expanded', 'false');
+            tipBtn.classList.remove('btn-info');
+            tipBtn.classList.add('btn-outline-info');
             tipBtn.style.backgroundColor = '';
-            tipBtn.style.color = '';
+            tipBtn.style.borderColor = '#0dcaf0';
+            tipBtn.style.color = '#0dcaf0';
         }
     }
     
@@ -224,6 +230,13 @@
             e.preventDefault();
             toggleTip();
         });
+    });
+    
+    // Initialize tip button styling
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipBtn = document.getElementById('tipBtn');
+        tipBtn.style.borderColor = '#0dcaf0';
+        tipBtn.style.color = '#0dcaf0';
     });
 </script>
             </div>

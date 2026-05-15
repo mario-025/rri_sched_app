@@ -6,16 +6,16 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>Manajemen Shift</h1>
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-info btn-sm" id="tipBtn" data-expanded="false">
-            💡 Tip
-        </button>
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0">Manajemen Shift</h1>
         <a href="{{ url_for('shift.shift_form') }}" class="btn btn-primary btn-lg">
             Tambah Shift Baru
         </a>
     </div>
+    <button type="button" class="btn btn-outline-info btn-sm" id="tipBtn" data-expanded="false">
+        Tip
+    </button>
 </div>
 
 <!-- Tip/Penjelasan yang bisa di-toggle -->
@@ -117,13 +117,19 @@
         if (tipContainer.style.display === 'none') {
             tipContainer.style.display = 'block';
             tipBtn.setAttribute('data-expanded', 'true');
+            tipBtn.classList.remove('btn-outline-info');
+            tipBtn.classList.add('btn-info');
             tipBtn.style.backgroundColor = '#0dcaf0';
+            tipBtn.style.borderColor = '#0dcaf0';
             tipBtn.style.color = 'white';
         } else {
             tipContainer.style.display = 'none';
             tipBtn.setAttribute('data-expanded', 'false');
+            tipBtn.classList.remove('btn-info');
+            tipBtn.classList.add('btn-outline-info');
             tipBtn.style.backgroundColor = '';
-            tipBtn.style.color = '';
+            tipBtn.style.borderColor = '#0dcaf0';
+            tipBtn.style.color = '#0dcaf0';
         }
     }
     
@@ -132,6 +138,13 @@
             e.preventDefault();
             toggleTip();
         });
+    });
+    
+    // Initialize tip button styling
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipBtn = document.getElementById('tipBtn');
+        tipBtn.style.borderColor = '#0dcaf0';
+        tipBtn.style.color = '#0dcaf0';
     });
 </script>
 

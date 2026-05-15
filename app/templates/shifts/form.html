@@ -21,10 +21,10 @@
             <div class="card-body p-4">
                 
                 <!-- Tip Button -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="mb-0">{% if shift %}Edit Shift{% else %}Tambah Shift Baru{% endif %}</h5>
-                    <button type="button" class="btn btn-sm btn-info" id="tipBtn" data-expanded="false">
-                        💡 Tip
+                <div class="mb-4">
+                    <h5 class="mb-2">{% if shift %}Edit Shift{% else %}Tambah Shift Baru{% endif %}</h5>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="tipBtn" data-expanded="false">
+                        Tip
                     </button>
                 </div>
                 
@@ -65,10 +65,30 @@
                                name="shift_index" 
                                id="shift_index"
                                class="form-control form-control-lg"
-                               value="{{ shift.shift_index if shift else '' }}"
+                               value="{{ shift.shift_index if shift else next_index }}"
                                min="1"
                                {% if shift and usage_count > 0 %}disabled{% endif %}
                                required>
+                        
+                        <!-- Existing Indexes Info -->
+                        {% if existing_indexes %}
+                        <div class="alert alert-light border-warning mt-3 mb-3">
+                            <small class="text-muted d-block mb-2">
+                                <strong>Index yang sudah ada:</strong>
+                            </small>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for idx in existing_indexes %}
+                                <span class="badge bg-warning text-dark">{{ idx }}</span>
+                                {% endfor %}
+                            </div>
+                            {% if not shift %}
+                            <small class="text-muted d-block mt-2">
+                                Saran index berikutnya: <strong>{{ next_index }}</strong>
+                            </small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
                         <small class="text-muted d-block mt-2">
                             <strong>Penjelasan:</strong> Index adalah urutan shift. Contoh:<br>
                             • 1 = Shift pertama (Pagi 06:00-14:00)<br>
@@ -208,13 +228,19 @@
         if (tipContainer.style.display === 'none') {
             tipContainer.style.display = 'block';
             tipBtn.setAttribute('data-expanded', 'true');
+            tipBtn.classList.remove('btn-outline-info');
+            tipBtn.classList.add('btn-info');
             tipBtn.style.backgroundColor = '#0dcaf0';
+            tipBtn.style.borderColor = '#0dcaf0';
             tipBtn.style.color = 'white';
         } else {
             tipContainer.style.display = 'none';
             tipBtn.setAttribute('data-expanded', 'false');
+            tipBtn.classList.remove('btn-info');
+            tipBtn.classList.add('btn-outline-info');
             tipBtn.style.backgroundColor = '';
-            tipBtn.style.color = '';
+            tipBtn.style.borderColor = '#0dcaf0';
+            tipBtn.style.color = '#0dcaf0';
         }
     }
     
@@ -223,6 +249,13 @@
             e.preventDefault();
             toggleTip();
         });
+    });
+    
+    // Initialize tip button styling
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipBtn = document.getElementById('tipBtn');
+        tipBtn.style.borderColor = '#0dcaf0';
+        tipBtn.style.color = '#0dcaf0';
     });
 </script>
 

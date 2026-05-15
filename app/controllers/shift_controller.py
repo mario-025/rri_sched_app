@@ -18,7 +18,12 @@ def get_shift_usage_count(shift_id):
 def shift_form():
     """Show form for create new shift"""
     return_to = request.args.get('return_to', None)
-    return render_template('shifts/form.html', shift=None, return_to=return_to)
+    # Get all existing shift indexes
+    all_shifts = Shift.query.order_by(Shift.shift_index).all()
+    existing_indexes = [s.shift_index for s in all_shifts]
+    # Calculate next index (max + 1)
+    next_index = max(existing_indexes) + 1 if existing_indexes else 1
+    return render_template('shifts/form.html', shift=None, return_to=return_to, existing_indexes=existing_indexes, next_index=next_index)
 
 
 def create_shift():
@@ -77,7 +82,10 @@ def edit_shift_form(shift_id):
     usage_count = get_shift_usage_count(shift_id)
     can_edit = usage_count == 0
     return_to = request.args.get('return_to', None)
-    return render_template('shifts/form.html', shift=shift, usage_count=usage_count, can_edit=can_edit, return_to=return_to)
+    # Get all existing shift indexes (excluding current one)
+    all_shifts = Shift.query.filter(Shift.id != shift_id).order_by(Shift.shift_index).all()
+    existing_indexes = [s.shift_index for s in all_shifts]
+    return render_template('shifts/form.html', shift=shift, usage_count=usage_count, can_edit=can_edit, return_to=return_to, existing_indexes=existing_indexes)
 
 
 def update_shift(shift_id):

@@ -67,12 +67,12 @@
 
                     <!-- Jumlah Pola Shift yang Dirotasi -->
                     <div class="mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <label class="form-label mb-0">
+                        <div class="mb-3">
+                            <label class="form-label mb-2">
                                 <strong>Pola Shift yang Dirotasi</strong>
                             </label>
-                            <button type="button" class="btn btn-sm btn-info" id="tipBtn" data-expanded="false">
-                                💡 Tip
+                            <button type="button" class="btn btn-sm btn-outline-info" id="tipBtn" data-expanded="false">
+                                Tip
                             </button>
                         </div>
                         
@@ -350,13 +350,19 @@
         if (tipContainer.style.display === 'none') {
             tipContainer.style.display = 'block';
             tipBtn.setAttribute('data-expanded', 'true');
+            tipBtn.classList.remove('btn-outline-info');
+            tipBtn.classList.add('btn-info');
             tipBtn.style.backgroundColor = '#0dcaf0';
+            tipBtn.style.borderColor = '#0dcaf0';
             tipBtn.style.color = 'white';
         } else {
             tipContainer.style.display = 'none';
             tipBtn.setAttribute('data-expanded', 'false');
+            tipBtn.classList.remove('btn-info');
+            tipBtn.classList.add('btn-outline-info');
             tipBtn.style.backgroundColor = '';
-            tipBtn.style.color = '';
+            tipBtn.style.borderColor = '#0dcaf0';
+            tipBtn.style.color = '#0dcaf0';
         }
     }
     
