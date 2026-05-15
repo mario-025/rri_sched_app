@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}
-    Preview Jadwal
+    Preview Jadwal - Kalender
 {% endblock %}
 
 {% block content %}
@@ -60,7 +60,6 @@
                                         <div class="small bg-light p-1 mb-1 rounded" 
                                              style="background-color: #c8e6c9; border-left: 3px solid #4caf50;">
                                             <div class="font-weight-bold text-truncate">{{ schedule.shift }}</div>
-                                            <div class="text-truncate text-muted">{{ schedule.user }}</div>
                                         </div>
                                     {% endfor %}
                                     {% if day_schedules|length > 4 %}

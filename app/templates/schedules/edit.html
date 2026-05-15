@@ -47,18 +47,9 @@
                                 <option value="{{ shift.id }}" {% if shift.id == schedule.shift_id %}selected{% endif %}>
                                     {{ shift.shift_name }} 
                                     ({{ shift.start_time.strftime('%H:%M') }} - {{ shift.end_time.strftime('%H:%M') }})
-                                    - Score: +{{ shift.score }}
                                 </option>
                             {% endfor %}
                         </select>
-                    </div>
-
-                    <div class="alert alert-info" role="alert">
-                        <strong>Keterangan:</strong>
-                        <ul class="mb-0 mt-2">
-                            <li>Score adalah poin yang ditambahkan ke karyawan ketika bekerja di shift tersebut</li>
-                            <li>Score karyawan mempengaruhi penjadwalan berikutnya</li>
-                        </ul>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -72,21 +63,6 @@
 
                 </form>
 
-            </div>
-        </div>
-
-        <!-- Info Jadwal Lama -->
-        <div class="card mt-4">
-            <div class="card-header">
-                <h5 class="mb-0">Informasi Sebelumnya</h5>
-            </div>
-            <div class="card-body">
-                <p>
-                    <strong>Karyawan:</strong> {{ schedule.user.fullname }}<br>
-                    <strong>Shift:</strong> {{ schedule.shift.shift_name }}<br>
-                    <strong>Jam:</strong> {{ schedule.shift.start_time.strftime('%H:%M') }} - {{ schedule.shift.end_time.strftime('%H:%M') }}<br>
-                    <strong>Score Shift:</strong> +{{ schedule.shift.score }}
-                </p>
             </div>
         </div>
 

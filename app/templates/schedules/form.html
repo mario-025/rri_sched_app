@@ -7,178 +7,117 @@
 {% block content %}
 
 <div class="row">
-    <div class="col-md-8 mx-auto">
-        <div class="card">
+    <div class="col-lg-6 mx-auto">
+        <div class="card shadow-sm">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0">Generate Jadwal Kerja</h4>
             </div>
-            <div class="card-body">
+            <div class="card-body p-4">
                 
                 <form method="POST" action="{{ url_for('schedule.generate_schedule_preview') }}">
                     
-                    <!-- Tahun -->
-                    <div class="mb-3">
-                        <label for="year" class="form-label">
-                            <strong>Tahun</strong>
-                        </label>
-                        <input
-                            type="number"
-                            name="year"
-                            id="year"
-                            class="form-control"
-                            value="{{ now.year }}"
-                            required
-                        >
-                        <small class="text-muted">Masukkan tahun (contoh: 2024)</small>
-                    </div>
-
-                    <!-- Bulan -->
-                    <div class="mb-3">
-                        <label for="month" class="form-label">
-                            <strong>Bulan</strong>
-                        </label>
-                        <select
-                            name="month"
-                            id="month"
-                            class="form-select"
-                            required
-                        >
-                            <option value="">-- Pilih Bulan --</option>
-                            <option value="1">Januari</option>
-                            <option value="2">Februari</option>
-                            <option value="3">Maret</option>
-                            <option value="4">April</option>
-                            <option value="5">Mei</option>
-                            <option value="6">Juni</option>
-                            <option value="7">Juli</option>
-                            <option value="8">Agustus</option>
-                            <option value="9">September</option>
-                            <option value="10">Oktober</option>
-                            <option value="11">November</option>
-                            <option value="12">Desember</option>
-                        </select>
-                    </div>
-
-                    <!-- Hari Libur -->
-                    <div class="mb-4">
-                        <label class="form-label">
-                            <strong>Hari Libur (Tidak ada jadwal)</strong>
-                        </label>
-                        <div class="card bg-light">
-                            <div class="card-body">
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        name="days_off"
-                                        value="0"
-                                        id="day_senin"
-                                        class="form-check-input"
-                                    >
-                                    <label class="form-check-label" for="day_senin">
-                                        Senin
-                                    </label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        name="days_off"
-                                        value="1"
-                                        id="day_selasa"
-                                        class="form-check-input"
-                                    >
-                                    <label class="form-check-label" for="day_selasa">
-                                        Selasa
-                                    </label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        name="days_off"
-                                        value="2"
-                                        id="day_rabu"
-                                        class="form-check-input"
-                                    >
-                                    <label class="form-check-label" for="day_rabu">
-                                        Rabu
-                                    </label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        name="days_off"
-                                        value="3"
-                                        id="day_kamis"
-                                        class="form-check-input"
-                                    >
-                                    <label class="form-check-label" for="day_kamis">
-                                        Kamis
-                                    </label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        name="days_off"
-                                        value="4"
-                                        id="day_jumat"
-                                        class="form-check-input"
-                                    >
-                                    <label class="form-check-label" for="day_jumat">
-                                        Jumat
-                                    </label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        name="days_off"
-                                        value="5"
-                                        id="day_sabtu"
-                                        class="form-check-input"
-                                    >
-                                    <label class="form-check-label" for="day_sabtu">
-                                        Sabtu
-                                    </label>
-                                </div>
-
-                                <div class="form-check">
-                                    <input
-                                        type="checkbox"
-                                        name="days_off"
-                                        value="6"
-                                        id="day_minggu"
-                                        class="form-check-input"
-                                        checked
-                                    >
-                                    <label class="form-check-label" for="day_minggu">
-                                        Minggu
-                                    </label>
-                                </div>
+                    <!-- Tahun dan Bulan dalam satu baris -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label for="year" class="form-label">
+                                <strong>Tahun</strong>
+                            </label>
+                            <div class="input-group">
+                                <input
+                                    type="number"
+                                    name="year"
+                                    id="year"
+                                    class="form-control form-control-lg"
+                                    value="{{ now.year }}"
+                                    min="2020"
+                                    max="2050"
+                                    required
+                                    style="font-size: 1.1rem; font-weight: bold;"
+                                >
                             </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="month" class="form-label">
+                                <strong>Bulan</strong>
+                            </label>
+                            <select
+                                name="month"
+                                id="month"
+                                class="form-select form-select-lg"
+                                required
+                                style="font-size: 1.1rem; font-weight: bold;"
+                            >
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Hari Libur dengan Grid Layout -->
+                    <div class="mb-4">
+                        <label class="form-label mb-3">
+                            <strong>Hari Libur (Tidak ada jadwal)</strong>
+                            <small class="d-block text-muted mt-1">Pilih hari-hari yang tidak ada jadwal kerja</small>
+                        </label>
+                        <div class="row g-2">
+                            {% set days = [
+                                {'value': '0', 'name': 'Senin', 'checked': false},
+                                {'value': '1', 'name': 'Selasa', 'checked': false},
+                                {'value': '2', 'name': 'Rabu', 'checked': false},
+                                {'value': '3', 'name': 'Kamis', 'checked': false},
+                                {'value': '4', 'name': 'Jumat', 'checked': false},
+                                {'value': '5', 'name': 'Sabtu', 'checked': false},
+                                {'value': '6', 'name': 'Minggu', 'checked': true}
+                            ] %}
+                            
+                            {% for day in days %}
+                            <div class="col-6 col-sm-4">
+                                <input
+                                    type="checkbox"
+                                    name="days_off"
+                                    value="{{ day.value }}"
+                                    id="day_{{ day.value }}"
+                                    class="btn-check"
+                                    {% if day.checked %}checked{% endif %}
+                                >
+                                <label class="btn btn-outline-primary w-100" for="day_{{ day.value }}" style="cursor: pointer;">
+                                    {{ day.name }}
+                                </label>
+                            </div>
+                            {% endfor %}
                         </div>
                     </div>
 
                     <!-- Alert Info -->
-                    <div class="alert alert-info" role="alert">
-                        <strong>ℹ️ Informasi:</strong>
-                        <ul class="mb-0 mt-2">
-                            <li>Sistem akan membuat jadwal berdasarkan pola shift yang telah dikonfigurasi</li>
+                    <div class="alert alert-info rounded-3 mb-4" role="alert">
+                        <strong>ℹ️ Informasi Penting:</strong>
+                        <ul class="mb-0 mt-2 ms-2">
+                            <li>Jadwal dibuat berdasarkan pola shift yang telah dikonfigurasi</li>
                             <li>Karyawan dengan skor lebih rendah akan diprioritaskan</li>
-                            <li>Setiap karyawan akan mendapat poin sesuai dengan shift yang dikerjakan</li>
+                            <li>Setiap karyawan mendapat poin sesuai shift yang dikerjakan</li>
                         </ul>
                     </div>
 
                     <!-- Buttons -->
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ url_for('schedule.list_schedules') }}" class="btn btn-secondary">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                            Generate Preview Jadwal
+                        </button>
+                        <a href="{{ url_for('schedule.list_schedules') }}" class="btn btn-outline-secondary">
                             Batal
                         </a>
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            Generate Preview
-                        </button>
                     </div>
 
                 </form>
@@ -188,7 +127,30 @@
     </div>
 </div>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+    .btn-check:checked + .btn {
+        background-color: #0d6efd;
+        color: white;
+        border-color: #0d6efd;
+    }
+    
+    .btn-check + .btn:hover {
+        background-color: #e7f1ff;
+        border-color: #0d6efd;
+    }
+    
+    .form-control-lg, .form-select-lg {
+        border-radius: 8px;
+    }
+    
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+</style>
 
 {% endblock %}

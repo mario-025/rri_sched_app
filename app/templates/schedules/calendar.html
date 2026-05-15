@@ -8,9 +8,46 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Kalender Jadwal Kerja</h1>
-    <a href="{{ url_for('schedule.schedule_form') }}" class="btn btn-primary">
-        + Generate Jadwal Baru
-    </a>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('schedule.schedule_form') }}" class="btn btn-primary">
+            + Generate Jadwal Baru
+        </a>
+        <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
+            Hapus Semua Jadwal
+        </button>
+    </div>
+</div>
+
+<!-- Modal Konfirmasi Hapus Semua -->
+<div class="modal fade" id="deleteAllModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Hapus Semua Jadwal</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Peringatan!</strong></p>
+                <p>Anda akan menghapus <strong>SEMUA jadwal</strong> yang sudah dibuat.</p>
+                <ul class="mb-3">
+                    <li>Semua jadwal kerja akan dihapus</li>
+                    <li>Score karyawan akan dikembalikan sesuai jadwal yang dihapus</li>
+                    <li>Aksi ini tidak bisa dibatalkan</li>
+                </ul>
+                <p>Apakah Anda yakin ingin melanjutkan?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Batal
+                </button>
+                <form method="POST" action="{{ url_for('schedule.delete_all_schedules') }}" style="display: inline;">
+                    <button type="submit" class="btn btn-danger">
+                        Ya, Hapus Semua
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Month Navigation -->
@@ -51,28 +88,26 @@
                         {% if day == 0 %}
                             <td class="bg-light"></td>
                         {% else %}
-                            {% set date_obj = None %}
                             {% set date_str = '%04d-%02d-%02d' % (year, month, day) %}
                             {% set day_schedules = schedules_by_date.get(date_str, []) %}
                             
-                            <td class="calendar-day" style="height: 150px; vertical-align: top; padding: 8px;">
+                            <td class="calendar-day">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <strong class="fs-5">{{ day }}</strong>
                                     {% if day_schedules %}
                                         <a href="{{ url_for('schedule.schedule_detail', work_date=date_str) }}" 
-                                           class="badge bg-primary">
+                                           class="badge bg-primary" style="cursor: pointer;">
                                             {{ day_schedules|length }} jadwal
                                         </a>
                                     {% endif %}
                                 </div>
                                 
-                                <div class="schedule-list" style="overflow-y: auto; max-height: 100px;">
+                                <div class="schedule-list" style="overflow-y: auto; max-height: 105px;">
                                     {% for schedule in day_schedules[:3] %}
                                         <div class="small bg-light p-1 mb-1 rounded" 
-                                             onclick="window.location.href='{{ url_for('schedule.edit_schedule_form', schedule_id=schedule.id) }}'"
-                                             style="cursor: pointer; background-color: #e3f2fd;">
+                                             onclick="window.location.href='{{ url_for('schedule.edit_schedule_form', schedule_id=schedule.id) }}';"
+                                             style="cursor: pointer; background-color: #e3f2fd; border-left: 3px solid #2196F3;">
                                             <div class="font-weight-bold text-truncate">{{ schedule.shift.shift_name }}</div>
-                                            <div class="text-truncate text-muted">{{ schedule.user.fullname }}</div>
                                         </div>
                                     {% endfor %}
                                     {% if day_schedules|length > 3 %}
@@ -85,7 +120,7 @@
                                 {% if day_schedules %}
                                     <a href="{{ url_for('schedule.schedule_detail', work_date=date_str) }}" 
                                        class="btn btn-sm btn-info mt-2 w-100">
-                                        Lihat Detail
+                                        Detail
                                     </a>
                                 {% endif %}
                             </td>
@@ -99,15 +134,27 @@
 
 <style>
     .calendar-table {
-        min-height: 600px;
+        min-height: 650px;
     }
-    .calendar-day {
+    .calendar-table td {
+        height: 160px;
+        vertical-align: top;
+        padding: 8px;
         border: 1px solid #dee2e6;
         background-color: #fff;
         transition: background-color 0.2s;
     }
+    .calendar-table td.bg-light {
+        background-color: #f8f9fa;
+    }
+    .calendar-day {
+        background-color: #fff;
+    }
     .calendar-day:hover {
         background-color: #f8f9fa;
+    }
+    .schedule-list .small:hover {
+        opacity: 0.8;
     }
 </style>
 

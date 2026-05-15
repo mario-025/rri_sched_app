@@ -1,0 +1,291 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if pattern %}Edit Pola Shift{% else %}Tambah Pola Shift{% endif %}
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    {% if pattern %}
+                        Edit Pola Shift
+                    {% else %}
+                        Tambah Pola Shift Baru
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <form method="POST" 
+                      action="{% if pattern %}{{ url_for('shift_pattern.update_pattern', pattern_id=pattern.id) }}{% else %}{{ url_for('shift_pattern.create_pattern') }}{% endif %}"
+                      id="patternForm">
+                    
+                    <!-- Pattern Name -->
+                    <div class="mb-3">
+                        <label for="pattern_name" class="form-label">
+                            <strong>Nama Pola Shift</strong>
+                        </label>
+                        <input type="text" 
+                               name="pattern_name" 
+                               id="pattern_name"
+                               class="form-control form-control-lg"
+                               value="{{ pattern.pattern_name if pattern else '' }}"
+                               placeholder="Contoh: Pola Standar, Pola Extended, dll"
+                               required>
+                        <small class="text-muted">Nama unik untuk pola shift ini</small>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-4">
+                        <label for="description" class="form-label">
+                            <strong>Deskripsi</strong>
+                        </label>
+                        <textarea name="description" 
+                                  id="description"
+                                  class="form-control"
+                                  rows="3"
+                                  placeholder="Deskripsi atau catatan tentang pola shift ini">{{ pattern.description if pattern else '' }}</textarea>
+                    </div>
+
+                    <!-- Shift Details Table -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="mb-0">Komposisi Shift</h5>
+                            <button type="button" class="btn btn-sm btn-success" id="addRow">
+                                Tambah Shift
+                            </button>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="detailsTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40%;">Shift</th>
+                                        <th class="text-center" style="width: 30%;">Jam Kerja</th>
+                                        <th class="text-center" style="width: 20%;">Jumlah Karyawan</th>
+                                        <th class="text-center" style="width: 10%;">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailsBody">
+                                    {% if pattern and pattern.details %}
+                                        {% for detail in pattern.details %}
+                                        <tr class="detail-row">
+                                            <td>
+                                                <select name="shift_ids[]" class="form-select shift-select" required>
+                                                    <option value="">-- Pilih Shift --</option>
+                                                    {% for shift in shifts %}
+                                                    <option value="{{ shift.id }}"
+                                                            data-start="{{ shift.start_time.strftime('%H:%M') }}"
+                                                            data-end="{{ shift.end_time.strftime('%H:%M') }}"
+                                                            {% if detail.shift_id == shift.id %}selected{% endif %}>
+                                                        {{ shift.shift_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="shift-time">
+                                                    {% if detail.shift %}
+                                                        {{ detail.shift.start_time.strftime('%H:%M') }} - {{ detail.shift.end_time.strftime('%H:%M') }}
+                                                    {% else %}
+                                                        --
+                                                    {% endif %}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <input type="number" 
+                                                       name="worker_counts[]" 
+                                                       class="form-control form-control-sm"
+                                                       value="{{ detail.worker_count }}"
+                                                       min="1"
+                                                       max="10"
+                                                       required>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger removeRow">
+                                                    Hapus
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    {% else %}
+                                        <!-- Default empty row -->
+                                        <tr class="detail-row">
+                                            <td>
+                                                <select name="shift_ids[]" class="form-select shift-select" required>
+                                                    <option value="">-- Pilih Shift --</option>
+                                                    {% for shift in shifts %}
+                                                    <option value="{{ shift.id }}"
+                                                            data-start="{{ shift.start_time.strftime('%H:%M') }}"
+                                                            data-end="{{ shift.end_time.strftime('%H:%M') }}">
+                                                        {{ shift.shift_name }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="shift-time">--</span>
+                                            </td>
+                                            <td>
+                                                <input type="number" 
+                                                       name="worker_counts[]" 
+                                                       class="form-control form-control-sm"
+                                                       value="1"
+                                                       min="1"
+                                                       max="10"
+                                                       required>
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-danger removeRow">
+                                                    Hapus
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <small class="text-muted">
+                            Tambahkan satu atau lebih shift untuk pola ini. Jumlah karyawan adalah berapa banyak karyawan yang ditugaskan untuk setiap shift.
+                        </small>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                            {% if pattern %}
+                                Perbarui Pola Shift
+                            {% else %}
+                                Simpan Pola Shift
+                            {% endif %}
+                        </button>
+                        <a href="{{ url_for('shift_pattern.list_patterns') }}" class="btn btn-outline-secondary">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .form-control-lg, .form-control, .form-select {
+        border-radius: 8px;
+    }
+    
+    .detail-row {
+        vertical-align: middle;
+    }
+    
+    .shift-time {
+        font-size: 0.95rem;
+        color: #666;
+    }
+</style>
+
+<script>
+    const detailsBody = document.getElementById('detailsBody');
+    const addRowBtn = document.getElementById('addRow');
+    
+    // Template untuk row baru
+    function createNewRow() {
+        const row = document.createElement('tr');
+        row.className = 'detail-row';
+        row.innerHTML = `
+            <td>
+                <select name="shift_ids[]" class="form-select shift-select" required>
+                    <option value="">-- Pilih Shift --</option>
+                    {% for shift in shifts %}
+                    <option value="{{ shift.id }}"
+                            data-start="{{ shift.start_time.strftime('%H:%M') }}"
+                            data-end="{{ shift.end_time.strftime('%H:%M') }}">
+                        {{ shift.shift_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </td>
+            <td class="text-center">
+                <span class="shift-time">--</span>
+            </td>
+            <td>
+                <input type="number" 
+                       name="worker_counts[]" 
+                       class="form-control form-control-sm"
+                       value="1"
+                       min="1"
+                       max="10"
+                       required>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger removeRow">
+                    Hapus
+                </button>
+            </td>
+        `;
+        
+        // Attach event listener ke dropdown dan remove button
+        row.querySelector('.shift-select').addEventListener('change', updateShiftTime);
+        row.querySelector('.removeRow').addEventListener('click', removeRow);
+        
+        return row;
+    }
+    
+    // Update shift time display
+    function updateShiftTime(e) {
+        const select = e.target;
+        const option = select.options[select.selectedIndex];
+        const startTime = option.dataset.start || '--';
+        const endTime = option.dataset.end || '--';
+        const row = select.closest('tr');
+        row.querySelector('.shift-time').textContent = startTime === '--' ? '--' : `${startTime} - ${endTime}`;
+    }
+    
+    // Remove row
+    function removeRow(e) {
+        e.preventDefault();
+        const row = e.target.closest('tr');
+        row.remove();
+    }
+    
+    // Add row
+    addRowBtn.addEventListener('click', function() {
+        const newRow = createNewRow();
+        detailsBody.appendChild(newRow);
+    });
+    
+    // Attach event listeners ke existing selects
+    document.querySelectorAll('.shift-select').forEach(select => {
+        select.addEventListener('change', updateShiftTime);
+    });
+    
+    // Attach event listeners ke existing remove buttons
+    document.querySelectorAll('.removeRow').forEach(btn => {
+        btn.addEventListener('click', removeRow);
+    });
+    
+    // Form validation
+    document.getElementById('patternForm').addEventListener('submit', function(e) {
+        const rows = detailsBody.querySelectorAll('.detail-row');
+        if (rows.length === 0) {
+            e.preventDefault();
+            alert('Minimal 1 shift harus ditambahkan ke pola shift');
+            return false;
+        }
+    });
+</script>
+
+{% endblock %}

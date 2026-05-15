@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Manajemen Pola Shift
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Manajemen Pola Shift</h1>
+    <a href="{{ url_for('shift_pattern.pattern_form') }}" class="btn btn-primary btn-lg">
+        Tambah Pola Shift Baru
+    </a>
+</div>
+
+{% if patterns %}
+<div class="row">
+    {% for pattern in patterns %}
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">{{ pattern.pattern_name }}</h5>
+            </div>
+            <div class="card-body">
+                {% if pattern.description %}
+                <p class="text-muted mb-3">{{ pattern.description }}</p>
+                {% endif %}
+                
+                <table class="table table-sm table-borderless mb-3">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Shift</th>
+                            <th class="text-center" style="width: 100px;">Jam Kerja</th>
+                            <th class="text-center" style="width: 80px;">Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for detail in pattern.details %}
+                        <tr>
+                            <td>{{ detail.shift.shift_name }}</td>
+                            <td class="text-center text-muted small">
+                                {{ detail.shift.start_time.strftime('%H:%M') }} - {{ detail.shift.end_time.strftime('%H:%M') }}
+                            </td>
+                            <td class="text-center fw-bold">{{ detail.worker_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white">
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('shift_pattern.edit_pattern_form', pattern_id=pattern.id) }}" 
+                       class="btn btn-sm btn-warning flex-grow-1">
+                        Edit
+                    </a>
+                    <form method="POST" 
+                          action="{{ url_for('shift_pattern.delete_pattern', pattern_id=pattern.id) }}"
+                          style="display: inline; flex-grow: 1;">
+                        <button type="submit" class="btn btn-sm btn-danger w-100"
+                                onclick="return confirm('Yakin ingin menghapus?')">
+                            Hapus
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    Belum ada data pola shift. <a href="{{ url_for('shift_pattern.pattern_form') }}">Tambah pola shift baru</a>
+</div>
+{% endif %}
+
+{% endblock %}

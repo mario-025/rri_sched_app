@@ -1,6 +1,7 @@
 import datetime
+import calendar
 
-from flask import flash, redirect, render_template, request, session
+from flask import flash, redirect, render_template, request, session, url_for
 from app.models.schedule import Schedule
 from app.models.user import User
 from app.models.shift import Shift
@@ -12,6 +13,40 @@ from app.services.scheduler import (
 )
 
 
+# Helper function untuk generate calendar data
+def get_calendar_data(year, month):
+    """
+    Generate calendar data dengan schedule count per tanggal
+    """
+    cal = calendar.monthcalendar(year, month)
+    
+    # Get semua schedule untuk bulan ini
+    first_day = datetime.date(year, month, 1)
+    last_day = datetime.date(
+        year, 
+        month, 
+        calendar.monthrange(year, month)[1]
+    )
+    
+    schedules_by_date = {}
+    schedules = Schedule.query.filter(
+        Schedule.work_date >= first_day,
+        Schedule.work_date <= last_day
+    ).options(
+        db.joinedload(Schedule.user),
+        db.joinedload(Schedule.shift)
+    ).all()
+    
+    # Group schedules by date
+    for sched in schedules:
+        date_key = sched.work_date.isoformat()
+        if date_key not in schedules_by_date:
+            schedules_by_date[date_key] = []
+        schedules_by_date[date_key].append(sched)
+    
+    return cal, schedules_by_date
+
+
 # tampil halaman form
 def schedule_form():
     return render_template(
@@ -19,7 +54,7 @@ def schedule_form():
         now=datetime.datetime.now()
     )
 
-# generate preview
+# generate preview dengan tampilan kalender
 def generate_schedule_preview():
     year = int(request.form["year"])
     month = int(request.form["month"])
@@ -42,9 +77,26 @@ def generate_schedule_preview():
     # simpan ke session
     session["preview_schedule"] = schedules
 
+    # Convert schedules to calendar format
+    cal = calendar.monthcalendar(year, month)
+    schedules_by_date = {}
+    
+    for sched in schedules:
+        date_key = sched["work_date"]
+        if date_key not in schedules_by_date:
+            schedules_by_date[date_key] = []
+        schedules_by_date[date_key].append(sched)
+    
+    month_name = calendar.month_name[month]
+
     return render_template(
-        "schedules/preview.html",
-        schedules=schedules
+        "schedules/preview_calendar.html",
+        year=year,
+        month=month,
+        month_name=month_name,
+        calendar_data=cal,
+        schedules_by_date=schedules_by_date,
+        total_schedules=len(schedules)
     )
 
 def save_schedule():
@@ -101,29 +153,42 @@ def save_schedule():
     return redirect("/schedules")
 
 
-# List seluruh schedule
+# List seluruh schedule dalam bentuk kalender
 def list_schedules():
-    page = request.args.get('page', 1, type=int)
-    per_page = 20
+    year = request.args.get('year', datetime.datetime.now().year, type=int)
+    month = request.args.get('month', datetime.datetime.now().month, type=int)
     
-    schedules = Schedule.query.options(
-        db.joinedload(Schedule.user),
-        db.joinedload(Schedule.shift)
-    ).order_by(
-        Schedule.work_date.desc()
-    ).paginate(
-        page=page, 
-        per_page=per_page
-    )
+    # Validate year and month
+    if month < 1 or month > 12:
+        month = datetime.datetime.now().month
+    if year < 1900 or year > 2100:
+        year = datetime.datetime.now().year
+    
+    cal, schedules_by_date = get_calendar_data(year, month)
+    
+    # Get month name
+    month_name = calendar.month_name[month]
+    
+    # Get previous and next month
+    if month == 1:
+        prev_month = (12, year - 1)
+        next_month = (2, year)
+    elif month == 12:
+        prev_month = (11, year)
+        next_month = (1, year + 1)
+    else:
+        prev_month = (month - 1, year)
+        next_month = (month + 1, year)
     
     return render_template(
-        "schedules/index.html",
-        schedules=schedules.items,
-        total=schedules.total,
-        pages=schedules.pages,
-        current_page=page,
-        max=max,
-        min=min
+        "schedules/calendar.html",
+        year=year,
+        month=month,
+        month_name=month_name,
+        calendar_data=cal,
+        schedules_by_date=schedules_by_date,
+        prev_month=prev_month,
+        next_month=next_month
     )
 
 
@@ -257,3 +322,40 @@ def delete_schedule(schedule_id):
     return redirect(
         f"/schedules/detail/{work_date}"
     )
+
+
+# Delete all schedules dan reverse semua score user
+def delete_all_schedules():
+    """Delete all schedules dan reverse semua user scores"""
+    try:
+        # Query semua schedules
+        all_schedules = Schedule.query.all()
+        
+        if not all_schedules:
+            flash("Tidak ada jadwal yang perlu dihapus", "info")
+            return redirect(url_for('schedule.list_schedules'))
+        
+        # Hitung berapa jadwal yang akan dihapus
+        total_schedules = len(all_schedules)
+        
+        # Reverse scores untuk setiap schedule
+        for schedule in all_schedules:
+            if schedule.shift and schedule.user:
+                schedule.user.score -= schedule.shift.score
+        
+        # Delete semua schedules
+        for schedule in all_schedules:
+            db.session.delete(schedule)
+        
+        db.session.commit()
+        
+        flash(
+            f"Semua {total_schedules} jadwal berhasil dihapus dan score user dikembalikan",
+            "success"
+        )
+        return redirect(url_for('schedule.list_schedules'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error saat menghapus jadwal: {str(e)}", "danger")
+        return redirect(url_for('schedule.list_schedules'))

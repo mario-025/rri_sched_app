@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Manajemen Shift
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Manajemen Shift</h1>
+    <a href="{{ url_for('shift.shift_form') }}" class="btn btn-primary btn-lg">
+        Tambah Shift Baru
+    </a>
+</div>
+
+{% if shifts %}
+<div class="table-responsive">
+    <table class="table table-hover table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th class="text-center" style="width: 80px;">No</th>
+                <th class="text-center" style="width: 100px;">Index</th>
+                <th>Nama Shift</th>
+                <th class="text-center" style="width: 120px;">Jam Kerja</th>
+                <th class="text-center" style="width: 80px;">Poin</th>
+                <th class="text-center" style="width: 200px;">Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for shift in shifts %}
+            <tr>
+                <td class="text-center">{{ loop.index }}</td>
+                <td class="text-center fw-bold">{{ shift.shift_index }}</td>
+                <td>{{ shift.shift_name }}</td>
+                <td class="text-center">
+                    {{ shift.start_time.strftime('%H:%M') }} - {{ shift.end_time.strftime('%H:%M') }}
+                </td>
+                <td class="text-center">{{ shift.score }}</td>
+                <td class="text-center">
+                    <a href="{{ url_for('shift.edit_shift_form', shift_id=shift.id) }}" 
+                       class="btn btn-sm btn-warning">
+                        Edit
+                    </a>
+                    <form method="POST" 
+                          action="{{ url_for('shift.delete_shift', shift_id=shift.id) }}"
+                          style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-danger"
+                                onclick="return confirm('Yakin ingin menghapus?')">
+                            Hapus
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="alert alert-info">
+    Belum ada data shift. <a href="{{ url_for('shift.shift_form') }}">Tambah shift baru</a>
+</div>
+{% endif %}
+
+{% endblock %}

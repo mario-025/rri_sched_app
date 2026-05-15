@@ -26,5 +26,12 @@ class Schedule(db.Model):
         nullable=False
     )
 
-    user = db.relationship("User", back_populates="schedules")
-    shift = db.relationship("app.models.shift.Shift")
+    user = db.relationship(
+        "User", 
+        back_populates="schedules"
+    )
+    shift = db.relationship(
+        "app.models.shift.Shift",
+        foreign_keys=[shift_id],
+        lazy="joined"
+    )

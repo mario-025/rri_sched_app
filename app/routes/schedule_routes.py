@@ -8,7 +8,8 @@ from app.controllers.schedule_controller import (
     schedule_detail,
     edit_schedule_form,
     update_schedule,
-    delete_schedule
+    delete_schedule,
+    delete_all_schedules
 )
 
 schedule_bp = Blueprint(
@@ -62,3 +63,9 @@ schedule_bp.route(
     "/delete/<int:schedule_id>",
     methods=["POST"]
 )(delete_schedule)
+
+# Delete all schedules
+schedule_bp.route(
+    "/delete-all",
+    methods=["POST"]
+)(delete_all_schedules)

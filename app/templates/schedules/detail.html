@@ -32,8 +32,6 @@
                     <th>Shift</th>
                     <th>Jam Kerja</th>
                     <th>Karyawan</th>
-                    <th>Skor Karyawan</th>
-                    <th>Skor Shift</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -47,12 +45,6 @@
                             {{ schedule.shift.end_time.strftime('%H:%M') }}
                         </td>
                         <td>{{ schedule.user.fullname }}</td>
-                        <td>
-                            <span class="badge bg-info">{{ schedule.user.score }}</span>
-                        </td>
-                        <td>
-                            <span class="badge bg-warning">+{{ schedule.shift.score }}</span>
-                        </td>
                         <td>
                             <a href="{{ url_for('schedule.edit_schedule_form', schedule_id=schedule.id) }}" 
                                class="btn btn-sm btn-warning">

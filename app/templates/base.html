@@ -15,36 +15,201 @@
         rel="stylesheet"
     >
 
+    <style>
+        body {
+            min-height: 100vh;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar-nav .nav-link {
+            color: white !important;
+            transition: color 0.2s;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #e0e0e0 !important;
+        }
+
+        .navbar-nav .dropdown-menu {
+            background-color: #0d6efd;
+            border: none;
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+        }
+
+        .navbar-nav .dropdown:hover .dropdown-menu {
+            display: block;
+            animation: slideDown 0.2s ease-in-out;
+        }
+
+        .navbar-nav .dropdown-menu .dropdown-item {
+            color: white;
+            padding: 10px 20px;
+            transition: background-color 0.2s;
+        }
+
+        .navbar-nav .dropdown-menu .dropdown-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .live-clock {
+            font-weight: bold;
+            color: white;
+            text-align: right;
+        }
+
+        .live-clock div:first-child {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .live-clock div:last-child {
+            font-size: 1.1rem;
+        }
+
+        .container-main {
+            padding: 20px;
+            min-height: calc(100vh - 56px);
+        }
+    </style>
+
 </head>
 
 <body>
 
-    <div class="container mt-4">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('home.home') }}">
+                Jadwal Kerja
+            </a>
 
+            <!-- Navigation Menu - Left side -->
+            <ul class="navbar-nav ms-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home.home') }}">
+                        Home
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button">
+                        Schedule
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('schedule.list_schedules') }}">
+                                Kalender
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('schedule.schedule_form') }}">
+                                Generate Jadwal
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button">
+                        Konfigurasi
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('shift.list_shifts') }}">
+                                Manajemen Shift
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{{ url_for('shift_pattern.list_patterns') }}">
+                                Pola Shift
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+
+            <!-- Live Clock - Right side -->
+            <div class="ms-auto d-flex align-items-center">
+                <div class="live-clock">
+                    <div id="live-date">--</div>
+                    <div id="live-clock">--:--:--</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-main">
         <!-- Flash Message -->
         {% with messages = get_flashed_messages(with_categories=true) %}
-
             {% if messages %}
-
                 {% for category, message in messages %}
-
-                    <div class="alert alert-{{ category }}">
-
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                         {{ message }}
-
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
-
                 {% endfor %}
-
             {% endif %}
-
         {% endwith %}
 
         <!-- isi halaman -->
         {% block content %}
         {% endblock %}
-
     </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Live Clock
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('live-clock').textContent = `${hours}:${minutes}:${seconds}`;
+            
+            // Update date
+            const daysIndo = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const monthsIndo = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                               'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            const day = daysIndo[now.getDay()];
+            const date = String(now.getDate()).padStart(2, '0');
+            const month = monthsIndo[now.getMonth()];
+            const year = now.getFullYear();
+            
+            document.getElementById('live-date').textContent = `${day}, ${date} ${month}`;
+        }
+        
+        // Update every second
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+
+    {% block extra_js %}
+    {% endblock %}
+
+</body>
+
+</html>
 
 </body>
 
