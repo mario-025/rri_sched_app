@@ -19,6 +19,19 @@
                 </h4>
             </div>
             <div class="card-body p-4">
+                
+                <!-- Info Alert -->
+                <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+                    <strong>Apa itu Pola Shift?</strong>
+                    <p class="mb-2">Pola shift adalah konfigurasi kombinasi shift untuk jadwal kerja. Misalnya:</p>
+                    <ul class="mb-2">
+                        <li><strong>Pola 3 Shift:</strong> 1 orang Pagi, 1 orang Siang, 1 orang Malam</li>
+                        <li><strong>Pola 2 Shift:</strong> 2 orang Pagi, 2 orang Siang</li>
+                    </ul>
+                    <p class="mb-0">Pola ini akan digunakan saat generate jadwal kerja.</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                
                 <form method="POST" 
                       action="{% if pattern %}{{ url_for('shift_pattern.update_pattern', pattern_id=pattern.id) }}{% else %}{{ url_for('shift_pattern.create_pattern') }}{% endif %}"
                       id="patternForm">
@@ -53,10 +66,19 @@
                     <!-- Shift Details Table -->
                     <div class="mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="mb-0">Komposisi Shift</h5>
-                            <button type="button" class="btn btn-sm btn-success" id="addRow">
-                                Tambah Shift
-                            </button>
+                            <div>
+                                <h5 class="mb-0 d-inline-block me-2">Komposisi Shift</h5>
+                                <small class="text-muted">Pilih shift yang akan digunakan di pola ini</small>
+                            </div>
+                            <div class="d-flex gap-3">
+                                <button type="button" class="btn btn-sm btn-success" id="addRow">
+                                    Tambah Shift
+                                </button>
+                                <a href="{% if pattern %}{{ url_for('shift.shift_form', return_to='shift-patterns-edit-' + pattern.id|string) }}{% else %}{{ url_for('shift.shift_form', return_to='shift-patterns-create') }}{% endif %}" 
+                                   class="btn btn-sm btn-info" target="_blank">
+                                    Shift Baru +
+                                </a>
+                            </div>
                         </div>
 
                         <div class="table-responsive">

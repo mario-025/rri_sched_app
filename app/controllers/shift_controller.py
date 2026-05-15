@@ -17,7 +17,8 @@ def get_shift_usage_count(shift_id):
 
 def shift_form():
     """Show form for create new shift"""
-    return render_template('shifts/form.html', shift=None)
+    return_to = request.args.get('return_to', None)
+    return render_template('shifts/form.html', shift=None, return_to=return_to)
 
 
 def create_shift():
@@ -28,17 +29,18 @@ def create_shift():
         start_time = request.form.get('start_time')
         end_time = request.form.get('end_time')
         score = request.form.get('score', type=int, default=1)
+        return_to = request.form.get('return_to', None)
         
         # Validate
         if not all([shift_index, shift_name, start_time, end_time]):
             flash('Semua field harus diisi', 'danger')
-            return redirect(url_for('shift.shift_form'))
+            return redirect(url_for('shift.shift_form', return_to=return_to) if return_to else url_for('shift.shift_form'))
         
         # Check duplicate shift_index
         existing = Shift.query.filter_by(shift_index=shift_index).first()
         if existing:
             flash(f'Shift Index {shift_index} sudah ada', 'danger')
-            return redirect(url_for('shift.shift_form'))
+            return redirect(url_for('shift.shift_form', return_to=return_to) if return_to else url_for('shift.shift_form'))
         
         shift = Shift(
             shift_index=shift_index,
@@ -52,12 +54,21 @@ def create_shift():
         db.session.commit()
         
         flash(f'Shift {shift_name} berhasil ditambahkan', 'success')
-        return redirect(url_for('shift.list_shifts'))
+        
+        # Return ke halaman yang sesuai
+        if return_to == 'shift-patterns-create':
+            return redirect(url_for('shift_pattern.pattern_form'))
+        elif return_to and return_to.startswith('shift-patterns-edit-'):
+            pattern_id = return_to.split('-')[-1]
+            return redirect(url_for('shift_pattern.edit_pattern_form', pattern_id=pattern_id))
+        else:
+            return redirect(url_for('shift.list_shifts'))
         
     except Exception as e:
         db.session.rollback()
         flash(f'Error: {str(e)}', 'danger')
-        return redirect(url_for('shift.shift_form'))
+        return_to = request.form.get('return_to', None)
+        return redirect(url_for('shift.shift_form', return_to=return_to) if return_to else url_for('shift.shift_form'))
 
 
 def edit_shift_form(shift_id):
@@ -65,7 +76,8 @@ def edit_shift_form(shift_id):
     shift = Shift.query.get_or_404(shift_id)
     usage_count = get_shift_usage_count(shift_id)
     can_edit = usage_count == 0
-    return render_template('shifts/form.html', shift=shift, usage_count=usage_count, can_edit=can_edit)
+    return_to = request.args.get('return_to', None)
+    return render_template('shifts/form.html', shift=shift, usage_count=usage_count, can_edit=can_edit, return_to=return_to)
 
 
 def update_shift(shift_id):

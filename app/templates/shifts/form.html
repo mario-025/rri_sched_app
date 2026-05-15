@@ -20,6 +20,15 @@
             </div>
             <div class="card-body p-4">
                 
+                <!-- Info Alert untuk Create -->
+                {% if not shift %}
+                <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+                    <strong>Informasi</strong>
+                    <p class="mb-0">Shift adalah jadwal kerja yang dapat dijadwalkan untuk karyawan. Setiap shift memiliki waktu mulai, waktu selesai, dan poin untuk karyawan.</p>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endif %}
+                
                 <!-- Warning Alert -->
                 {% if shift and usage_count > 0 %}
                 <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
@@ -34,10 +43,15 @@
                       action="{% if shift %}{{ url_for('shift.update_shift', shift_id=shift.id) }}{% else %}{{ url_for('shift.create_shift') }}{% endif %}"
                       {% if shift and usage_count > 0 %}disabled{% endif %}>
                     
+                    <!-- Hidden return_to parameter -->
+                    {% if return_to %}
+                    <input type="hidden" name="return_to" value="{{ return_to }}">
+                    {% endif %}
+                    
                     <!-- Shift Index -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="shift_index" class="form-label">
-                            <strong>Urutan Shift</strong>
+                            <strong>Urutan Shift (Index)</strong>
                         </label>
                         <input type="number" 
                                name="shift_index" 
@@ -47,11 +61,17 @@
                                min="1"
                                {% if shift and usage_count > 0 %}disabled{% endif %}
                                required>
-                        <small class="text-muted">Contoh: 1 untuk shift pertama, 2 untuk shift kedua</small>
+                        <small class="text-muted d-block mt-2">
+                            <strong>Penjelasan:</strong> Index adalah urutan shift. Contoh:<br>
+                            • 1 = Shift pertama (Pagi 06:00-14:00)<br>
+                            • 2 = Shift kedua (Siang 14:00-22:00)<br>
+                            • 3 = Shift ketiga (Malam 22:00-06:00)<br>
+                            <span class="text-danger">Tidak boleh duplikat!</span>
+                        </small>
                     </div>
 
                     <!-- Shift Name -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="shift_name" class="form-label">
                             <strong>Nama Shift</strong>
                         </label>
@@ -63,10 +83,13 @@
                                placeholder="Contoh: Pagi, Siang, Malam"
                                {% if shift and usage_count > 0 %}disabled{% endif %}
                                required>
+                        <small class="text-muted d-block mt-2">
+                            <strong>Penjelasan:</strong> Nama yang mudah dikenali untuk shift ini. Akan ditampilkan di kalender dan jadwal kerja.
+                        </small>
                     </div>
 
                     <!-- Start Time -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="start_time" class="form-label">
                             <strong>Jam Mulai</strong>
                         </label>
@@ -77,10 +100,13 @@
                                value="{{ shift.start_time.strftime('%H:%M') if shift else '' }}"
                                {% if shift and usage_count > 0 %}disabled{% endif %}
                                required>
+                        <small class="text-muted d-block mt-2">
+                            <strong>Penjelasan:</strong> Waktu ketika shift dimulai (format 24 jam).
+                        </small>
                     </div>
 
                     <!-- End Time -->
-                    <div class="mb-3">
+                    <div class="mb-4">
                         <label for="end_time" class="form-label">
                             <strong>Jam Selesai</strong>
                         </label>
@@ -91,6 +117,9 @@
                                value="{{ shift.end_time.strftime('%H:%M') if shift else '' }}"
                                {% if shift and usage_count > 0 %}disabled{% endif %}
                                required>
+                        <small class="text-muted d-block mt-2">
+                            <strong>Penjelasan:</strong> Waktu ketika shift berakhir (format 24 jam).
+                        </small>
                     </div>
 
                     <!-- Score -->
@@ -106,7 +135,9 @@
                                min="1"
                                {% if shift and usage_count > 0 %}disabled{% endif %}
                                required>
-                        <small class="text-muted">Poin yang diberikan ke karyawan saat bekerja shift ini</small>
+                        <small class="text-muted d-block mt-2">
+                            <strong>Penjelasan:</strong> Poin yang diberikan ke karyawan setiap kali bekerja di shift ini. Digunakan untuk sistem penilaian karyawan.
+                        </small>
                     </div>
 
                     <!-- Buttons -->
@@ -124,7 +155,18 @@
                             {% endif %}
                         </button>
                         {% endif %}
-                        <a href="{{ url_for('shift.list_shifts') }}" class="btn btn-outline-secondary">
+                        <a href="{% if return_to %}
+                                    {% if return_to == 'shift-patterns-create' %}
+                                        {{ url_for('shift_pattern.pattern_form') }}
+                                    {% elif return_to.startswith('shift-patterns-edit-') %}
+                                        {{ url_for('shift_pattern.edit_pattern_form', pattern_id=return_to.split('-')[-1]) }}
+                                    {% else %}
+                                        {{ url_for('shift.list_shifts') }}
+                                    {% endif %}
+                                {% else %}
+                                    {{ url_for('shift.list_shifts') }}
+                                {% endif %}" 
+                           class="btn btn-outline-secondary">
                             Kembali
                         </a>
                     </div>
