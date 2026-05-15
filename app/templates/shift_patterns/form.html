@@ -20,16 +20,25 @@
             </div>
             <div class="card-body p-4">
                 
-                <!-- Info Alert -->
-                <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
-                    <strong>Apa itu Pola Shift?</strong>
-                    <p class="mb-2">Pola shift adalah konfigurasi kombinasi shift untuk jadwal kerja. Misalnya:</p>
+                <!-- Tip Button -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">{% if pattern %}Edit Pola Shift{% else %}Tambah Pola Shift Baru{% endif %}</h5>
+                    <button type="button" class="btn btn-sm btn-info" id="tipBtn" data-expanded="false">
+                        💡 Tip
+                    </button>
+                </div>
+                
+                <!-- Info Alert untuk Tip -->
+                <div id="tipContainer" class="alert alert-light border-info mb-4" style="display: none;">
+                    <h6 class="alert-heading">Apa itu Pola Shift?</h6>
+                    <p class="mb-2">Pola shift adalah kombinasi shift untuk jadwal kerja. Digunakan saat generate jadwal.</p>
+                    <p class="mb-2"><strong>Contoh Pola 3 Shift:</strong></p>
                     <ul class="mb-2">
-                        <li><strong>Pola 3 Shift:</strong> 1 orang Pagi, 1 orang Siang, 1 orang Malam</li>
-                        <li><strong>Pola 2 Shift:</strong> 2 orang Pagi, 2 orang Siang</li>
+                        <li>1 orang Shift Pagi (06:00 - 14:00)</li>
+                        <li>1 orang Shift Siang (14:00 - 22:00)</li>
+                        <li>1 orang Shift Malam (22:00 - 06:00)</li>
                     </ul>
-                    <p class="mb-0">Pola ini akan digunakan saat generate jadwal kerja.</p>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <p class="mb-0"><strong>Contoh Pola 2 Shift:</strong> 2 orang Pagi, 2 orang Siang (tanpa Malam)</p>
                 </div>
                 
                 <form method="POST" 
@@ -190,6 +199,33 @@
                         </a>
                     </div>
                 </form>
+                
+<script>
+    // Toggle Tip
+    function toggleTip() {
+        const tipContainer = document.getElementById('tipContainer');
+        const tipBtn = document.getElementById('tipBtn');
+        
+        if (tipContainer.style.display === 'none') {
+            tipContainer.style.display = 'block';
+            tipBtn.setAttribute('data-expanded', 'true');
+            tipBtn.style.backgroundColor = '#0dcaf0';
+            tipBtn.style.color = 'white';
+        } else {
+            tipContainer.style.display = 'none';
+            tipBtn.setAttribute('data-expanded', 'false');
+            tipBtn.style.backgroundColor = '';
+            tipBtn.style.color = '';
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('tipBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleTip();
+        });
+    });
+</script>
             </div>
         </div>
     </div>

@@ -37,8 +37,8 @@ def select_user(users, assigned_today):
         candidates
     )
 
-def generate_schedule(year, month, days_off=None):
-    patterns = (
+def generate_schedule(year, month, days_off=None, patterns_to_use=None):
+    all_patterns = (
     ShiftPattern.query
     .options(
         joinedload(
@@ -48,6 +48,13 @@ def generate_schedule(year, month, days_off=None):
         )).all()
     )
     users = User.query.all()
+    
+    # Filter patterns berdasarkan patterns_to_use jika diberikan
+    # PENTING: Maintain urutan sesuai patterns_to_use, bukan urutan database
+    if patterns_to_use:
+        patterns = [p for pid in patterns_to_use for p in all_patterns if p.id == pid]
+    else:
+        patterns = all_patterns
     
     # validasi data
     if not users:

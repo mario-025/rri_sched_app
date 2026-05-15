@@ -20,14 +20,22 @@
             </div>
             <div class="card-body p-4">
                 
-                <!-- Info Alert untuk Create -->
-                {% if not shift %}
-                <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
-                    <strong>Informasi</strong>
-                    <p class="mb-0">Shift adalah jadwal kerja yang dapat dijadwalkan untuk karyawan. Setiap shift memiliki waktu mulai, waktu selesai, dan poin untuk karyawan.</p>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                <!-- Tip Button -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">{% if shift %}Edit Shift{% else %}Tambah Shift Baru{% endif %}</h5>
+                    <button type="button" class="btn btn-sm btn-info" id="tipBtn" data-expanded="false">
+                        💡 Tip
+                    </button>
                 </div>
-                {% endif %}
+                
+                <!-- Info Alert untuk Tip -->
+                <div id="tipContainer" class="alert alert-light border-info mb-4" style="display: none;">
+                    <h6 class="alert-heading">Cara Membuat Shift</h6>
+                    <p class="mb-2"><strong>Index:</strong> Urutan shift dalam sistem (tidak boleh duplikat). Contoh: 1, 2, 3</p>
+                    <p class="mb-2"><strong>Nama Shift:</strong> Nama yang mudah dikenali. Contoh: Pagi, Siang, Malam</p>
+                    <p class="mb-2"><strong>Jam Kerja:</strong> Waktu mulai dan selesai dalam format 24 jam</p>
+                    <p class="mb-0"><strong>Poin:</strong> Nilai yang diberikan ke karyawan setiap shift. Digunakan untuk sistem penilaian.</p>
+                </div>
                 
                 <!-- Warning Alert -->
                 {% if shift and usage_count > 0 %}
@@ -190,5 +198,32 @@
         border-radius: 8px;
     }
 </style>
+
+<script>
+    // Toggle Tip
+    function toggleTip() {
+        const tipContainer = document.getElementById('tipContainer');
+        const tipBtn = document.getElementById('tipBtn');
+        
+        if (tipContainer.style.display === 'none') {
+            tipContainer.style.display = 'block';
+            tipBtn.setAttribute('data-expanded', 'true');
+            tipBtn.style.backgroundColor = '#0dcaf0';
+            tipBtn.style.color = 'white';
+        } else {
+            tipContainer.style.display = 'none';
+            tipBtn.setAttribute('data-expanded', 'false');
+            tipBtn.style.backgroundColor = '';
+            tipBtn.style.color = '';
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('tipBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleTip();
+        });
+    });
+</script>
 
 {% endblock %}

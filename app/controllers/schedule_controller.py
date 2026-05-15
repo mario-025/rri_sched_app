@@ -5,6 +5,7 @@ from flask import flash, redirect, render_template, request, session, url_for
 from app.models.schedule import Schedule
 from app.models.user import User
 from app.models.shift import Shift
+from app.models.shift_pattern import ShiftPattern
 from app.config.database import db
 from sqlalchemy import func
 
@@ -49,9 +50,11 @@ def get_calendar_data(year, month):
 
 # tampil halaman form
 def schedule_form():
+    patterns = ShiftPattern.query.all()
     return render_template(
         "schedules/form.html",
-        now=datetime.datetime.now()
+        now=datetime.datetime.now(),
+        patterns=patterns
     )
 
 # generate preview dengan tampilan kalender
@@ -67,11 +70,30 @@ def generate_schedule_preview():
         int(day)
         for day in days_off
     ]
+    
+    # Get semua pola yang dipilih user (menggunakan pola[])
+    patterns_to_use = []
+    pola_list = request.form.getlist("pola[]")
+    
+    # Filter pola yang tidak kosong dan convert ke int
+    for pola_str in pola_list:
+        if pola_str:
+            try:
+                pola_id = int(pola_str)
+                patterns_to_use.append(pola_id)
+            except (ValueError, TypeError):
+                pass
+    
+    # Validasi minimal 1 pola dipilih
+    if not patterns_to_use:
+        flash("Minimal 1 pola shift harus dipilih", "danger")
+        return redirect(url_for('schedule.schedule_form'))
 
     schedules = generate_schedule(
         year=year,
         month=month,
-        days_off=days_off
+        days_off=days_off,
+        patterns_to_use=patterns_to_use
     )
 
     # simpan ke session
