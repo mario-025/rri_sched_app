@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Users
+{% endblock %}
+
+{% block content %}
+<h1>Users</h1>
+
+<a href="/users/create">
+    Tambah User
+</a>
+
+<br><br>
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>ID</th>
+        <th>Fullname</th>
+        <th>Username</th>
+        <th>Score</th>
+        <th>Action</th>
+    </tr>
+
+    {% for user in users %}
+
+    <tr>
+
+        <td>{{ user.id }}</td>
+        <td>{{ user.fullname }}</td>
+        <td>{{ user.username }}</td>
+        <td>{{ user.score }}</td>
+
+        <td>
+
+            <a href="/users/{{ user.id }}/edit">
+                Edit
+            </a>
+
+            <form
+                action="/users/{{ user.id }}/delete"
+                method="POST"
+                style="display:inline;"
+            >
+
+                <button type="submit">
+                    Delete
+                </button>
+
+            </form>
+
+        </td>
+
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+{% endblock %}

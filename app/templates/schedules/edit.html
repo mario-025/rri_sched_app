@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Edit Jadwal
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <a href="{{ url_for('schedule.list_schedules') }}" class="btn btn-secondary">
+        ← Kembali ke Daftar
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card">
+            <div class="card-header bg-warning">
+                <h4 class="mb-0">Edit Jadwal</h4>
+            </div>
+            <div class="card-body">
+                
+                <div class="mb-3">
+                    <label class="form-label"><strong>Tanggal</strong></label>
+                    <input type="text" class="form-control" value="{{ schedule.work_date.strftime('%d %b %Y') }}" disabled>
+                </div>
+
+                <form method="POST" action="{{ url_for('schedule.update_schedule', schedule_id=schedule.id) }}">
+                    
+                    <div class="mb-3">
+                        <label for="user_id" class="form-label"><strong>Pilih Karyawan</strong></label>
+                        <select name="user_id" id="user_id" class="form-select" required>
+                            <option value="">-- Pilih Karyawan --</option>
+                            {% for user in users %}
+                                <option value="{{ user.id }}" {% if user.id == schedule.user_id %}selected{% endif %}>
+                                    {{ user.fullname }} (Score: {{ user.score }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="shift_id" class="form-label"><strong>Pilih Shift</strong></label>
+                        <select name="shift_id" id="shift_id" class="form-select" required>
+                            <option value="">-- Pilih Shift --</option>
+                            {% for shift in shifts %}
+                                <option value="{{ shift.id }}" {% if shift.id == schedule.shift_id %}selected{% endif %}>
+                                    {{ shift.shift_name }} 
+                                    ({{ shift.start_time.strftime('%H:%M') }} - {{ shift.end_time.strftime('%H:%M') }})
+                                    - Score: +{{ shift.score }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="alert alert-info" role="alert">
+                        <strong>Keterangan:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Score adalah poin yang ditambahkan ke karyawan ketika bekerja di shift tersebut</li>
+                            <li>Score karyawan mempengaruhi penjadwalan berikutnya</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('schedule.list_schedules') }}" class="btn btn-secondary">
+                            Batal
+                        </a>
+                        <button type="submit" class="btn btn-warning">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Info Jadwal Lama -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Informasi Sebelumnya</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    <strong>Karyawan:</strong> {{ schedule.user.fullname }}<br>
+                    <strong>Shift:</strong> {{ schedule.shift.shift_name }}<br>
+                    <strong>Jam:</strong> {{ schedule.shift.start_time.strftime('%H:%M') }} - {{ schedule.shift.end_time.strftime('%H:%M') }}<br>
+                    <strong>Score Shift:</strong> +{{ schedule.shift.score }}
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

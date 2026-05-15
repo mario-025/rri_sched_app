@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Detail Jadwal - {{ work_date }}
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <a href="{{ url_for('schedule.list_schedules') }}" class="btn btn-secondary">
+        ← Kembali ke Daftar
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h4 class="mb-0">Jadwal Tanggal {{ work_date }}</h4>
+    </div>
+    <div class="card-body">
+        <p class="mb-0">
+            <strong>Total Karyawan:</strong> {{ schedules|length }}
+        </p>
+    </div>
+</div>
+
+{% if schedules %}
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>No</th>
+                    <th>Shift</th>
+                    <th>Jam Kerja</th>
+                    <th>Karyawan</th>
+                    <th>Skor Karyawan</th>
+                    <th>Skor Shift</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in schedules %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ schedule.shift.shift_name }}</strong></td>
+                        <td>
+                            {{ schedule.shift.start_time.strftime('%H:%M') }} - 
+                            {{ schedule.shift.end_time.strftime('%H:%M') }}
+                        </td>
+                        <td>{{ schedule.user.fullname }}</td>
+                        <td>
+                            <span class="badge bg-info">{{ schedule.user.score }}</span>
+                        </td>
+                        <td>
+                            <span class="badge bg-warning">+{{ schedule.shift.score }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ url_for('schedule.edit_schedule_form', schedule_id=schedule.id) }}" 
+                               class="btn btn-sm btn-warning">
+                                Edit
+                            </a>
+                            <form method="POST" 
+                                  action="{{ url_for('schedule.delete_schedule', schedule_id=schedule.id) }}"
+                                  style="display: inline;"
+                                  onsubmit="return confirm('Yakin ingin menghapus jadwal ini?')">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    Hapus
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+{% else %}
+    <div class="alert alert-info" role="alert">
+        Tidak ada jadwal untuk tanggal ini.
+    </div>
+{% endif %}
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}

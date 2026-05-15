@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Preview Jadwal
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <a href="{{ url_for('schedule.schedule_form') }}" class="btn btn-secondary">
+        ← Kembali
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h4 class="mb-0">Preview Jadwal</h4>
+    </div>
+    <div class="card-body">
+        <p class="mb-0">
+            <strong>Total Jadwal yang akan dibuat:</strong> {{ schedules|length }}
+        </p>
+    </div>
+</div>
+
+{% if schedules %}
+    
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>No</th>
+                    <th>Tanggal</th>
+                    <th>Hari</th>
+                    <th>Karyawan</th>
+                    <th>Shift</th>
+                    <th>Jam Kerja</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for schedule in schedules %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td><strong>{{ schedule.work_date }}</strong></td>
+                        <td>{{ schedule.day }}</td>
+                        <td>{{ schedule.user }}</td>
+                        <td>{{ schedule.shift }}</td>
+                        <td>
+                            (Score: +{{ schedule.shift_score }})
+                        </td>
+                        <td>
+                            <span class="badge bg-success">{{ schedule.user_score }}</span>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="alert alert-warning" role="alert">
+        <strong>⚠️ Perhatian:</strong> Setelah jadwal disimpan, data tidak dapat dikembalikan. Pastikan preview sudah benar.
+    </div>
+
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <a href="{{ url_for('schedule.schedule_form') }}" class="btn btn-secondary">
+            Batal
+        </a>
+        <form method="POST" action="{{ url_for('schedule.save_schedule') }}" style="display: inline;">
+            <button type="submit" class="btn btn-success btn-lg">
+                ✓ Simpan Jadwal
+            </button>
+        </form>
+    </div>
+
+{% else %}
+    <div class="alert alert-warning" role="alert">
+        Tidak ada jadwal yang dibuat. Silakan coba lagi dengan parameter yang berbeda.
+    </div>
+{% endif %}
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}
