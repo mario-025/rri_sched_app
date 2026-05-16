@@ -6,7 +6,8 @@ from app.controllers.user_controller import (
     create_form,
     edit_form,
     update_user,
-    delete_user
+    delete_user,
+    user_detail
 )
 
 user_bp = Blueprint(
@@ -14,35 +15,44 @@ user_bp = Blueprint(
     __name__
 )
 
+# List all users
 user_bp.route(
     "/",
     methods=["GET"]
 )(get_all_users)
 
+# Create form
 user_bp.route(
     "/create",
     methods=["GET"]
 )(create_form)
 
+# Save new user
 user_bp.route(
     "/create",
     methods=["POST"]
 )(create_user)
 
-# form edit
+# User detail
 user_bp.route(
-    "/<int:id>/edit",
+    "/<int:user_id>/detail",
+    methods=["GET"]
+)(user_detail)
+
+# Edit form
+user_bp.route(
+    "/<int:user_id>/edit",
     methods=["GET"]
 )(edit_form)
 
-# update data
+# Update user
 user_bp.route(
-    "/<int:id>/edit",
+    "/<int:user_id>/edit",
     methods=["POST"]
 )(update_user)
 
-# delete
+# Delete user
 user_bp.route(
-    "/<int:id>/delete",
+    "/<int:user_id>/delete",
     methods=["POST"]
 )(delete_user)

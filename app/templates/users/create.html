@@ -1,36 +1,136 @@
-<!DOCTYPE html>
-<html>
-<body>
+{% extends "base.html" %}
 
-<h1>Create User</h1>
+{% block title %}
+    Tambah Pegawai Baru
+{% endblock %}
 
-<form method="POST">
+{% block content %}
 
-    <label>Fullname</label>
-    <br>
+<div class="row">
+    <div class="col-lg-6 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Tambah Pegawai Baru</h4>
+            </div>
+            <div class="card-body p-4">
+                
+                <!-- Tip Button -->
+                <div class="mb-4">
+                    <h5 class="mb-2">Informasi Pegawai</h5>
+                    <button type="button" class="btn btn-sm btn-outline-info" id="tipBtn" data-expanded="false">
+                        Tip
+                    </button>
+                </div>
+                
+                <!-- Info Alert untuk Tip -->
+                <div id="tipContainer" class="alert alert-light border-info mb-4" style="display: none;">
+                    <h6 class="alert-heading">Cara Menambah Pegawai</h6>
+                    <p class="mb-2"><strong>Nama Lengkap:</strong> Nama pegawai/karyawan yang mudah dikenali</p>
+                    <p class="mb-0"><strong>Username:</strong> Nama pengguna unik untuk identifikasi pegawai di sistem (tidak boleh ada yang sama)</p>
+                </div>
 
-    <input
-        type="text"
-        name="fullname"
-    >
+                <form method="POST" action="{{ url_for('user.create_user') }}">
+                    
+                    <!-- Fullname -->
+                    <div class="mb-4">
+                        <label for="fullname" class="form-label">
+                            <strong>Nama Lengkap</strong>
+                        </label>
+                        <input type="text" 
+                               name="fullname" 
+                               id="fullname"
+                               class="form-control form-control-lg"
+                               placeholder="Contoh: Budi Santoso"
+                               required>
+                        <small class="text-muted d-block mt-2">
+                            Masukkan nama lengkap pegawai
+                        </small>
+                    </div>
 
-    <br><br>
+                    <!-- Username -->
+                    <div class="mb-4">
+                        <label for="username" class="form-label">
+                            <strong>Username</strong>
+                        </label>
+                        <input type="text" 
+                               name="username" 
+                               id="username"
+                               class="form-control form-control-lg"
+                               placeholder="Contoh: budi_santoso"
+                               required>
+                        <small class="text-muted d-block mt-2">
+                            Username harus unik (tidak boleh sama dengan pegawai lain)
+                        </small>
+                    </div>
 
-    <label>Username</label>
-    <br>
+                    <!-- Buttons -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                            Simpan Pegawai
+                        </button>
+                        <a href="{{ url_for('user.get_all_users') }}" class="btn btn-outline-secondary">
+                            Batal
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <input
-        type="text"
-        name="username"
-    >
+<script>
+    // Toggle Tip
+    function toggleTip() {
+        const tipContainer = document.getElementById('tipContainer');
+        const tipBtn = document.getElementById('tipBtn');
+        
+        if (tipContainer.style.display === 'none') {
+            tipContainer.style.display = 'block';
+            tipBtn.setAttribute('data-expanded', 'true');
+            tipBtn.classList.remove('btn-outline-info');
+            tipBtn.classList.add('btn-info');
+            tipBtn.style.backgroundColor = '#0dcaf0';
+            tipBtn.style.borderColor = '#0dcaf0';
+            tipBtn.style.color = 'white';
+        } else {
+            tipContainer.style.display = 'none';
+            tipBtn.setAttribute('data-expanded', 'false');
+            tipBtn.classList.remove('btn-info');
+            tipBtn.classList.add('btn-outline-info');
+            tipBtn.style.backgroundColor = '';
+            tipBtn.style.borderColor = '#0dcaf0';
+            tipBtn.style.color = '#0dcaf0';
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('tipBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            toggleTip();
+        });
+    });
+    
+    // Initialize tip button styling
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipBtn = document.getElementById('tipBtn');
+        tipBtn.style.borderColor = '#0dcaf0';
+        tipBtn.style.color = '#0dcaf0';
+    });
+</script>
 
-    <br><br>
+<style>
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .form-control-lg {
+        border-radius: 8px;
+    }
+</style>
 
-    <button type="submit">
-        Save
-    </button>
-
-</form>
-
-</body>
-</html>
+{% endblock %}

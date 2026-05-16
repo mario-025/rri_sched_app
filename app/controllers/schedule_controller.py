@@ -89,12 +89,23 @@ def generate_schedule_preview():
         flash("Minimal 1 pola shift harus dipilih", "danger")
         return redirect(url_for('schedule.schedule_form'))
 
-    schedules = generate_schedule(
+    result = generate_schedule(
         year=year,
         month=month,
         days_off=days_off,
         patterns_to_use=patterns_to_use
     )
+    
+    # Handle error dari generate_schedule
+    if result.get("error"):
+        flash(result["error"], "danger")
+        return redirect(url_for('schedule.schedule_form'))
+    
+    schedules = result.get("schedules", [])
+    
+    if not schedules:
+        flash("Tidak ada jadwal yang berhasil dibuat. Cek konfigurasi pola shift dan jumlah pegawai.", "warning")
+        return redirect(url_for('schedule.schedule_form'))
 
     # simpan ke session
     session["preview_schedule"] = schedules
@@ -131,48 +142,54 @@ def save_schedule():
             "Preview schedule tidak ditemukan",
             "danger"
         )
-        return redirect("/schedules")
+        return redirect(url_for('schedule.list_schedules'))
 
-    # Dictionary untuk track score updates per user
-    user_score_updates = {}
+    try:
+        # Dictionary untuk track score updates per user
+        user_score_updates = {}
 
-    for item in schedules:
-        new_schedule = Schedule(
-            user_id=item["user_id"],
-            shift_id=item["shift_id"],
-            work_date= datetime.date.fromisoformat(item["work_date"])
+        for item in schedules:
+            new_schedule = Schedule(
+                user_id=item["user_id"],
+                shift_id=item["shift_id"],
+                work_date=datetime.date.fromisoformat(item["work_date"])
+            )
+
+            db.session.add(new_schedule)
+            
+            # Track score increment untuk user ini
+            if item["user_id"] not in user_score_updates:
+                user_score_updates[item["user_id"]] = 0
+            user_score_updates[item["user_id"]] += item["shift_score"]
+
+        # Flush terlebih dahulu untuk assign ID
+        db.session.flush()
+
+        # Update score untuk setiap user
+        for user_id, score_increment in user_score_updates.items():
+            user = User.query.get(user_id)
+            if user:
+                user.score += score_increment
+
+        db.session.commit()
+
+        # hapus preview session
+        session.pop(
+            "preview_schedule",
+            None
         )
 
-        db.session.add(new_schedule)
-        
-        # Track score increment untuk user ini
-        if item["user_id"] not in user_score_updates:
-            user_score_updates[item["user_id"]] = 0
-        user_score_updates[item["user_id"]] += item["shift_score"]
+        flash(
+            "Schedule berhasil disimpan",
+            "success"
+        )
 
-    # Flush terlebih dahulu untuk assign ID
-    db.session.flush()
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error menyimpan schedule: {str(e)}", "danger")
+        return redirect(url_for('schedule.list_schedules'))
 
-    # Update score untuk setiap user
-    for user_id, score_increment in user_score_updates.items():
-        user = User.query.get(user_id)
-        if user:
-            user.score += score_increment
-
-    db.session.commit()
-
-    # hapus preview session
-    session.pop(
-        "preview_schedule",
-        None
-    )
-
-    flash(
-        "Schedule berhasil disimpan",
-        "success"
-    )
-
-    return redirect("/schedules")
+    return redirect(url_for('schedule.list_schedules'))
 
 
 # List seluruh schedule dalam bentuk kalender

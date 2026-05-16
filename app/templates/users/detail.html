@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Detail Pegawai - {{ user.fullname }}
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <a href="{{ url_for('user.get_all_users') }}" class="btn btn-outline-secondary btn-sm">
+        ← Kembali
+    </a>
+</div>
+
+<!-- User Info Card -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">Informasi Pegawai</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Nama Lengkap</h6>
+                        <h5 class="mb-4">{{ user.fullname }}</h5>
+                        
+                        <h6 class="text-muted">Username</h6>
+                        <h5 class="mb-0">@{{ user.username }}</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-muted">Score Kinerja</h6>
+                        <h3 class="text-info mb-4">{{ user.score }}</h3>
+                        
+                        <div>
+                            <a href="{{ url_for('user.edit_form', user_id=user.id) }}" 
+                               class="btn btn-warning btn-sm">
+                                Edit
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted">Total Jadwal</h6>
+                <h3 class="text-success mb-3">{{ schedules|length }}</h3>
+                
+                <h6 class="text-muted">Shift Ditugaskan</h6>
+                <h3 class="text-info">{{ shifts_assigned|length }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shifts Assigned -->
+{% if shifts_assigned %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">Shift yang Ditugaskan</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for shift in shifts_assigned %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="alert alert-light border-start border-5 border-info mb-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1"><strong>{{ shift.shift_name }}</strong></h6>
+                            <small class="text-muted">Index: {{ shift.shift_index }}</small>
+                        </div>
+                        <span class="badge bg-info">{{ shift.score }} poin</span>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        {{ shift.start_time.strftime('%H:%M') }} - {{ shift.end_time.strftime('%H:%M') }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Calendar Section -->
+<div class="card shadow-sm">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">Jadwal Kerja - {{ month_name }} {{ year }}</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>Min</th>
+                        <th>Sen</th>
+                        <th>Sel</th>
+                        <th>Rab</th>
+                        <th>Kam</th>
+                        <th>Jum</th>
+                        <th>Sab</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in calendar %}
+                    <tr style="height: 100px;">
+                        {% for day in week %}
+                        <td class="align-top" style="vertical-align: top;">
+                            {% if day == 0 %}
+                                <span class="text-muted small">-</span>
+                            {% else %}
+                                <div class="fw-bold mb-2">{{ day }}</div>
+                                
+                                {% if day in schedule_map %}
+                                    {% set work_date = schedule_map[day] %}
+                                    <div class="badge bg-success mb-1" style="font-size: 0.75rem; display: inline-block;">
+                                        {{ work_date.shift.shift_name }}
+                                    </div>
+                                    <small class="d-block text-muted" style="font-size: 0.7rem;">
+                                        {{ work_date.shift.start_time.strftime('%H:%M') }}-{{ work_date.shift.end_time.strftime('%H:%M') }}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted" style="font-size: 0.75rem;">—</small>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Schedules -->
+{% if schedules %}
+<div class="card shadow-sm mt-4">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">Daftar Jadwal Terbaru</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Shift</th>
+                        <th>Jam</th>
+                        <th>Poin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in schedules[:10] %}
+                    <tr>
+                        <td>
+                            <strong>{{ schedule.work_date.strftime('%d %b %Y') }}</strong>
+                        </td>
+                        <td>{{ schedule.shift.shift_name }}</td>
+                        <td class="text-muted small">
+                            {{ schedule.shift.start_time.strftime('%H:%M') }} - {{ schedule.shift.end_time.strftime('%H:%M') }}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ schedule.shift.score }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if schedules|length > 10 %}
+        <p class="text-muted small mb-0">... dan {{ schedules|length - 10 }} jadwal lainnya</p>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="alert alert-info mt-4">
+    Pegawai ini belum memiliki jadwal kerja. Jadwal akan otomatis ditugaskan saat generate jadwal.
+</div>
+{% endif %}
+
+<style>
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+    
+    .table {
+        margin-bottom: 0;
+    }
+    
+    .alert {
+        border-radius: 8px;
+    }
+</style>
+
+{% endblock %}

@@ -13,9 +13,9 @@ def generate_dates(year, month):
         yield datetime.date( year, month, day_num)
 
 def get_pattern_for_day(work_day_index, patterns):
-    return patterns[
-        work_day_index % len(patterns)
-    ]
+    if not patterns:
+        return None
+    return patterns[work_day_index % len(patterns)]
 
 def select_user(users, assigned_today):
     available_users = [
@@ -56,11 +56,11 @@ def generate_schedule(year, month, days_off=None, patterns_to_use=None):
     else:
         patterns = all_patterns
     
-    # validasi data
+    # Validasi data dengan pengecekan yang lebih ketat
     if not users:
-        return []
-    if not patterns:
-        return []
+        return {"error": "Tidak ada pegawai. Tambahkan pegawai terlebih dahulu.", "schedules": []}
+    if not patterns or len(patterns) == 0:
+        return {"error": "Tidak ada pola shift. Buat pola shift terlebih dahulu.", "schedules": []}
     if days_off is None:
         days_off = []
 
@@ -76,11 +76,15 @@ def generate_schedule(year, month, days_off=None, patterns_to_use=None):
             work_day_index,
             patterns
         )
+        
+        # Safety check
+        if not pattern:
+            continue
 
-        for detail in sorted(pattern.details,key=lambda d: d.shift.shift_index):
+        for detail in sorted(pattern.details, key=lambda d: d.shift.shift_index):
             shift = detail.shift
             for _ in range(detail.worker_count):
-                user = select_user(users,assigned_today)
+                user = select_user(users, assigned_today)
                 if not user:
                     break
                 assigned_today.add(user.id)
@@ -90,14 +94,14 @@ def generate_schedule(year, month, days_off=None, patterns_to_use=None):
 
                 generated_schedule.append({
                     "user_id": user.id,
-                    "shift_id":shift.id,
+                    "shift_id": shift.id,
                     "work_date": current_date.isoformat(),
                     "user": user.fullname,
                     "user_score": user.score,
-                    "day" : days_mapping[weekday],
+                    "day": days_mapping[weekday],
                     "shift": shift.shift_name,
-                    "shift_score" : shift.score,
+                    "shift_score": shift.score,
                     "pattern": pattern.pattern_name
                 })
         work_day_index += 1
-    return generated_schedule
+    return {"error": None, "schedules": generated_schedule}
