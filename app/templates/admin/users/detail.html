@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Detail Pegawai - {{ user.fullname }}
+{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <a href="{{ url_for('user.get_all_users') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-2"></i>Kembali
+    </a>
+</div>
+
+<!-- User Info Card -->
+<div class="row mb-4">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-circle me-2"></i>Informasi Pegawai
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small">
+                            <i class="fas fa-id-badge me-1"></i>Nama Lengkap
+                        </h6>
+                        <h5 class="mb-0">{{ user.fullname }}</h5>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small">
+                            <i class="fas fa-user me-1"></i>Username
+                        </h6>
+                        <h5 class="mb-0"><code>@{{ user.username }}</code></h5>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="row mb-3">
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small">
+                            <i class="fas fa-envelope me-1"></i>Email
+                        </h6>
+                        <h5 class="mb-0">
+                            {% if user.email %}
+                                <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6 class="text-muted small">
+                            <i class="fas fa-phone me-1"></i>Nomor Telepon
+                        </h6>
+                        <h5 class="mb-0">
+                            {% if user.phone_number %}
+                                <a href="tel:{{ user.phone_number }}">{{ user.phone_number }}</a>
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </h5>
+                    </div>
+                </div>
+
+                <hr>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('user.edit_form', user_id=user.id) }}" 
+                       class="btn btn-warning">
+                        <i class="fas fa-edit me-1"></i>Edit Data
+                    </a>
+                    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteConfirmModal">
+                        <i class="fas fa-trash me-1"></i>Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="col-lg-4">
+        <div class="card shadow-sm bg-light mb-3">
+            <div class="card-body text-center">
+                <h6 class="text-muted">
+                    <i class="fas fa-calendar me-1"></i>Total Jadwal
+                </h6>
+                <h2 class="text-success mb-0">{{ schedules|length }}</h2>
+            </div>
+        </div>
+
+        <div class="card shadow-sm bg-light">
+            <div class="card-body text-center">
+                <h6 class="text-muted">
+                    <i class="fas fa-hourglass-half me-1"></i>Shift Ditugaskan
+                </h6>
+                <h2 class="text-info mb-0">{{ shifts_assigned|length }}</h2>
+            </div>
+        </div>
+
+        <div class="card shadow-sm bg-light mt-3">
+            <div class="card-body text-center">
+                <h6 class="text-muted">
+                    <i class="fas fa-star me-1"></i>Score Kinerja
+                </h6>
+                <h2 class="text-warning mb-0">{{ user.score }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shifts Assigned -->
+{% if shifts_assigned %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-briefcase me-2"></i>Shift yang Ditugaskan ({{ shifts_assigned|length }})
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for shift in shifts_assigned %}
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="alert alert-light border-start border-5 border-info mb-0">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-1"><strong>{{ shift.shift_name }}</strong></h6>
+                            <small class="text-muted">Index: #{{ shift.shift_index }}</small>
+                        </div>
+                        <span class="badge bg-info">{{ shift.score }} poin</span>
+                    </div>
+                    <small class="text-muted d-block mt-2">
+                        <i class="fas fa-clock me-1"></i>{{ shift.start_time.strftime('%H:%M') }} - {{ shift.end_time.strftime('%H:%M') }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Calendar Section -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-calendar-alt me-2"></i>Jadwal Kerja - {{ month_name }} {{ year }}
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered text-center">
+                <thead class="table-light">
+                    <tr>
+                        <th>Min</th>
+                        <th>Sen</th>
+                        <th>Sel</th>
+                        <th>Rab</th>
+                        <th>Kam</th>
+                        <th>Jum</th>
+                        <th>Sab</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in calendar %}
+                    <tr style="height: 100px;">
+                        {% for day in week %}
+                        <td class="align-top" style="vertical-align: top;">
+                            {% if day == 0 %}
+                                <span class="text-muted small">-</span>
+                            {% else %}
+                                <div class="fw-bold mb-2">{{ day }}</div>
+                                
+                                {% if day in schedule_map %}
+                                    {% set work_date = schedule_map[day] %}
+                                    <div class="badge bg-success mb-1" style="font-size: 0.75rem; display: inline-block;">
+                                        {{ work_date.shift.shift_name }}
+                                    </div>
+                                    <small class="d-block text-muted" style="font-size: 0.7rem;">
+                                        {{ work_date.shift.start_time.strftime('%H:%M') }}-{{ work_date.shift.end_time.strftime('%H:%M') }}
+                                    </small>
+                                {% else %}
+                                    <small class="text-muted" style="font-size: 0.75rem;">—</small>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Schedules -->
+{% if schedules %}
+<div class="card shadow-sm">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>Daftar Jadwal Terbaru
+        </h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tanggal</th>
+                        <th>Shift</th>
+                        <th>Jam</th>
+                        <th>Poin</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for schedule in schedules[:10] %}
+                    <tr>
+                        <td>
+                            <strong>{{ schedule.work_date.strftime('%d %b %Y') }}</strong>
+                        </td>
+                        <td>{{ schedule.shift.shift_name }}</td>
+                        <td class="text-muted small">
+                            {{ schedule.shift.start_time.strftime('%H:%M') }} - {{ schedule.shift.end_time.strftime('%H:%M') }}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">{{ schedule.shift.score }}</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if schedules|length > 10 %}
+        <p class="text-muted small mb-0">
+            <i class="fas fa-info-circle me-1"></i>... dan {{ schedules|length - 10 }} jadwal lainnya
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-circle me-2"></i>Konfirmasi Hapus
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Anda yakin ingin menghapus pegawai <strong>{{ user.fullname }}</strong>?</p>
+                <p class="text-danger mb-0">
+                    <i class="fas fa-warning me-2"></i>
+                    Tindakan ini akan menghapus semua jadwal pegawai dan tidak dapat dibatalkan!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <a href="{{ url_for('user.delete_user', user_id=user.id) }}" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Ya, Hapus
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -14,6 +14,9 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
         rel="stylesheet"
     >
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         body {
@@ -90,6 +93,16 @@
             padding: 20px;
             min-height: calc(100vh - 56px);
         }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .badge-role {
+            font-size: 0.75rem;
+        }
     </style>
 
 </head>
@@ -100,60 +113,108 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('home.home') }}">
-                Jadwal Kerja
+                <i class="fas fa-calendar-check me-2"></i>Jadwal Kerja
             </a>
 
-            <!-- Navigation Menu - Left side -->
+            <!-- Navigation Menu - Admin -->
+            {% if session.get('admin_id') %}
             <ul class="navbar-nav ms-3">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('home.home') }}">
-                        Home
+                        <i class="fas fa-home me-1"></i>Home
                     </a>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button">
-                        Schedule
+                        <i class="fas fa-calendar me-1"></i>Schedule
                     </a>
                     <ul class="dropdown-menu">
                         <li>
                             <a class="dropdown-item" href="{{ url_for('schedule.list_schedules') }}">
-                                Kalender
+                                <i class="fas fa-calendar-alt me-2"></i>Kalender
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="{{ url_for('schedule.schedule_form') }}">
-                                Generate Jadwal
+                                <i class="fas fa-plus-circle me-2"></i>Generate Jadwal
                             </a>
                         </li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button">
-                        Konfigurasi
+                        <i class="fas fa-cog me-1"></i>Konfigurasi
                     </a>
                     <ul class="dropdown-menu">
                         <li>
                             <a class="dropdown-item" href="{{ url_for('user.get_all_users') }}">
-                                Manajemen Pegawai
+                                <i class="fas fa-users me-2"></i>Manajemen Pegawai
                             </a>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ url_for('shift.list_shifts') }}">
-                                Manajemen Shift
+                                <i class="fas fa-hourglass-half me-2"></i>Manajemen Shift
                             </a>
                         </li>
                         <li>
                             <a class="dropdown-item" href="{{ url_for('shift_pattern.list_patterns') }}">
-                                Pola Shift
+                                <i class="fas fa-bars me-2"></i>Pola Shift
                             </a>
                         </li>
                     </ul>
                 </li>
             </ul>
+            {% endif %}
 
-            <!-- Live Clock - Right side -->
-            <div class="ms-auto d-flex align-items-center">
+            <!-- Navigation Menu - User -->
+            {% if session.get('user_id') %}
+            <ul class="navbar-nav ms-3">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('home.home') }}">
+                        <i class="fas fa-home me-1"></i>Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_profile.user_profile') }}">
+                        <i class="fas fa-user me-1"></i>Profil Saya
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('user_profile.user_my_schedules') }}">
+                        <i class="fas fa-list me-1"></i>Jadwal Saya
+                    </a>
+                </li>
+            </ul>
+            {% endif %}
+
+            <!-- Live Clock & User Info - Right side -->
+            <div class="ms-auto d-flex align-items-center gap-4">
+                <!-- Admin Info -->
+                {% if session.get('admin_id') %}
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-white-50">
+                        <i class="fas fa-shield-alt me-1"></i>Admin: <strong>{{ session.get('admin_fullname', 'Admin') }}</strong>
+                    </small>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- User Info -->
+                {% if session.get('user_id') %}
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-white-50">
+                        <i class="fas fa-user-tie me-1"></i>Pegawai: <strong>{{ session.get('user_fullname', 'User') }}</strong>
+                    </small>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Live Clock -->
                 <div class="live-clock">
                     <div id="live-date">--</div>
                     <div id="live-clock">--:--:--</div>
@@ -212,10 +273,6 @@
 
     {% block extra_js %}
     {% endblock %}
-
-</body>
-
-</html>
 
 </body>
 

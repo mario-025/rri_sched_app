@@ -20,6 +20,22 @@ class User(db.Model):
         nullable=False
     )
 
+    phone_number = db.Column(
+        db.String(15),
+        nullable=True
+    )
+
+    email = db.Column(
+        db.String(100),
+        unique=True,
+        nullable=True
+    )
+
+    password = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
     score = db.Column(
         db.Integer,
         default=0

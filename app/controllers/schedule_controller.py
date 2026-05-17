@@ -8,6 +8,7 @@ from app.models.shift import Shift
 from app.models.shift_pattern import ShiftPattern
 from app.config.database import db
 from sqlalchemy import func
+from app.controllers.auth_controller import login_required
 
 from app.services.scheduler import (
     generate_schedule
@@ -49,6 +50,7 @@ def get_calendar_data(year, month):
 
 
 # tampil halaman form
+@login_required
 def schedule_form():
     patterns = ShiftPattern.query.all()
     return render_template(
@@ -132,6 +134,7 @@ def generate_schedule_preview():
         total_schedules=len(schedules)
     )
 
+@login_required
 def save_schedule():
     schedules = session.get(
         "preview_schedule"
@@ -193,6 +196,7 @@ def save_schedule():
 
 
 # List seluruh schedule dalam bentuk kalender
+@login_required
 def list_schedules():
     year = request.args.get('year', datetime.datetime.now().year, type=int)
     month = request.args.get('month', datetime.datetime.now().month, type=int)
@@ -232,6 +236,7 @@ def list_schedules():
 
 
 # Detail schedule per tanggal
+@login_required
 def schedule_detail(work_date):
     try:
         date_obj = datetime.date.fromisoformat(work_date)
@@ -268,6 +273,7 @@ def schedule_detail(work_date):
 
 
 # Form edit schedule
+@login_required
 def edit_schedule_form(schedule_id):
     schedule = Schedule.query.get_or_404(schedule_id)
     users = User.query.all()
@@ -282,6 +288,7 @@ def edit_schedule_form(schedule_id):
 
 
 # Update schedule
+@login_required
 def update_schedule(schedule_id):
     schedule = Schedule.query.get_or_404(schedule_id)
     
@@ -341,6 +348,7 @@ def update_schedule(schedule_id):
 
 
 # Delete schedule
+@login_required
 def delete_schedule(schedule_id):
     schedule = Schedule.query.get_or_404(schedule_id)
     work_date = schedule.work_date.isoformat()
@@ -364,6 +372,7 @@ def delete_schedule(schedule_id):
 
 
 # Delete all schedules dan reverse semua score user
+@login_required
 def delete_all_schedules():
     """Delete all schedules dan reverse semua user scores"""
     try:

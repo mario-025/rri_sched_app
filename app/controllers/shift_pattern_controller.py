@@ -3,20 +3,24 @@ from app.config.database import db
 from app.models.shift_pattern import ShiftPattern
 from app.models.shift_patern_detail import ShiftPatternDetail
 from app.models.shift import Shift
+from app.controllers.auth_controller import login_required
 
 
+@login_required
 def list_patterns():
     """List all shift patterns"""
     patterns = ShiftPattern.query.all()
     return render_template('shift_patterns/index.html', patterns=patterns)
 
 
+@login_required
 def pattern_form():
     """Show form for create new pattern"""
     shifts = Shift.query.order_by(Shift.shift_index).all()
     return render_template('shift_patterns/form.html', pattern=None, shifts=shifts)
 
 
+@login_required
 def create_pattern():
     """Save new pattern with inline details"""
     try:
@@ -68,6 +72,7 @@ def create_pattern():
         return redirect(url_for('shift_pattern.pattern_form'))
 
 
+@login_required
 def edit_pattern_form(pattern_id):
     """Show form for edit pattern with details"""
     pattern = ShiftPattern.query.get_or_404(pattern_id)
@@ -75,6 +80,7 @@ def edit_pattern_form(pattern_id):
     return render_template('shift_patterns/form.html', pattern=pattern, shifts=shifts)
 
 
+@login_required
 def update_pattern(pattern_id):
     """Update pattern and details"""
     try:
@@ -126,6 +132,7 @@ def update_pattern(pattern_id):
         return redirect(url_for('shift_pattern.edit_pattern_form', pattern_id=pattern_id))
 
 
+@login_required
 def delete_pattern(pattern_id):
     """Delete pattern and its details"""
     try:

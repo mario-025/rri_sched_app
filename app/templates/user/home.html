@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard Jadwal Saya{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <h1 class="mb-4">Dashboard Jadwal Saya</h1>
+    
+    <!-- Current/Upcoming Shift Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            {% if current_shift and current_shift_status == 'ongoing' %}
+                <!-- Current Shift (Sedang Berlangsung) -->
+                <div class="alert alert-success border-3" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="fas fa-play-circle me-2"></i>Shift Sedang Berlangsung
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Shift:</strong> {{ current_shift.shift.shift_name }}</p>
+                            <p class="mb-2"><strong>Waktu:</strong> {{ current_shift.shift.start_time.strftime('%H:%M') }} - {{ current_shift.shift.end_time.strftime('%H:%M') }}</p>
+                            <p class="mb-0"><strong>Tanggal:</strong> {{ current_shift.work_date.strftime('%d %B %Y') }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% set start_time = current_shift.shift.start_time %}
+                            {% set end_time = current_shift.shift.end_time %}
+                            {% set total_seconds = (end_time.hour * 3600 + end_time.minute * 60) - (start_time.hour * 3600 + start_time.minute * 60) %}
+                            {% set elapsed_seconds = (current_time.hour * 3600 + current_time.minute * 60) - (start_time.hour * 3600 + start_time.minute * 60) %}
+                            {% set progress_percent = (elapsed_seconds / total_seconds * 100) | int %}
+                            
+                            <div class="progress" style="height: 25px;">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                                     role="progressbar" 
+                                     style="width: {{ progress_percent }}%"
+                                     aria-valuenow="{{ progress_percent }}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="100">
+                                    {{ progress_percent }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">Waktu berjalan: {{ current_time.strftime('%H:%M:%S') }}</small>
+                        </div>
+                    </div>
+                </div>
+            {% elif current_shift and current_shift_status == 'upcoming_today' %}
+                <!-- Upcoming Today -->
+                <div class="alert alert-info border-3" role="alert">
+                    <h4 class="alert-heading">
+                        <i class="fas fa-clock me-2"></i>Jadwal Hari Ini (Belum Dimulai)
+                    </h4>
+                    <p class="mb-2"><strong>Shift:</strong> {{ current_shift.shift.shift_name }}</p>
+                    <p class="mb-2"><strong>Waktu:</strong> {{ current_shift.shift.start_time.strftime('%H:%M') }} - {{ current_shift.shift.end_time.strftime('%H:%M') }}</p>
+                    <p class="mb-0"><strong>Dimulai dalam:</strong> 
+                        {% set start_seconds = (current_shift.shift.start_time.hour * 3600 + current_shift.shift.start_time.minute * 60) - (current_time.hour * 3600 + current_time.minute * 60) %}
+                        {% set hours = start_seconds // 3600 %}
+                        {% set minutes = (start_seconds % 3600) // 60 %}
+                        {{ hours }} jam {{ minutes }} menit
+                    </p>
+                </div>
+            {% else %}
+                <div class="alert alert-secondary" role="alert">
+                    <i class="fas fa-calendar-check me-2"></i>Anda tidak memiliki jadwal hari ini
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Upcoming Schedules -->
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="mb-3">Jadwal Mendatang (7 hari ke depan)</h3>
+            
+            {% if upcoming_schedules %}
+                <div class="list-group">
+                    {% for schedule in upcoming_schedules %}
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-3">
+                                <p class="mb-0">
+                                    <strong>{{ schedule.work_date.strftime('%d %B %Y') }}</strong>
+                                </p>
+                                <small class="text-muted">{{ schedule.work_date.strftime('%A') }}</small>
+                            </div>
+                            <div class="col-md-4">
+                                <p class="mb-0"><strong>{{ schedule.shift.shift_name }}</strong></p>
+                                <small class="text-muted">{{ schedule.shift.start_time.strftime('%H:%M') }} - {{ schedule.shift.end_time.strftime('%H:%M') }}</small>
+                            </div>
+                            <div class="col-md-5 text-end">
+                                <span class="badge bg-primary">
+                                    <i class="fas fa-briefcase me-1"></i>
+                                    Score: {{ schedule.shift.score }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>Tidak ada jadwal untuk 7 hari ke depan
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Quick Links -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <a href="{{ url_for('user_profile.user_profile') }}" class="btn btn-outline-primary me-2">
+                <i class="fas fa-user me-2"></i>Lihat Profil Saya
+            </a>
+            <a href="{{ url_for('user_profile.user_my_schedules') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-calendar me-2"></i>Semua Jadwal Saya
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

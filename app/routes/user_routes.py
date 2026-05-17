@@ -7,7 +7,8 @@ from app.controllers.user_controller import (
     edit_form,
     update_user,
     delete_user,
-    user_detail
+    user_detail,
+    api_generate_password
 )
 
 user_bp = Blueprint(
@@ -56,3 +57,9 @@ user_bp.route(
     "/<int:user_id>/delete",
     methods=["POST"]
 )(delete_user)
+
+# Generate random password (API)
+user_bp.route(
+    "/api/generate-password",
+    methods=["GET"]
+)(api_generate_password)

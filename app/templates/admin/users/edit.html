@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Edit Pegawai - {{ user.fullname }}
+{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-7 mx-auto">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-edit me-2"></i>Edit Pegawai: {{ user.fullname }}
+                </h4>
+            </div>
+            <div class="card-body p-4">
+
+                <form method="POST" action="{{ url_for('user.update_user', user_id=user.id) }}">
+                    
+                    <!-- Row 1: Nama Lengkap & Username -->
+                    <div class="row">
+                        <!-- Fullname -->
+                        <div class="col-md-6 mb-3">
+                            <label for="fullname" class="form-label">
+                                <strong>Nama Lengkap</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="fullname" 
+                                   id="fullname"
+                                   class="form-control form-control-lg"
+                                   value="{{ user.fullname }}"
+                                   required
+                                   autofocus>
+                            <small class="text-muted">Nama lengkap pegawai</small>
+                        </div>
+
+                        <!-- Username -->
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">
+                                <strong>Username</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="username" 
+                                   id="username"
+                                   class="form-control form-control-lg"
+                                   value="{{ user.username }}"
+                                   required>
+                            <small class="text-muted">Harus unik (tidak boleh sama)</small>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Email & Nomor Telpon -->
+                    <div class="row">
+                        <!-- Email -->
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <strong>Email</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   name="email" 
+                                   id="email"
+                                   class="form-control form-control-lg"
+                                   value="{{ user.email or '' }}"
+                                   required>
+                            <small class="text-muted">Email harus valid & unik</small>
+                        </div>
+
+                        <!-- Nomor Telpon -->
+                        <div class="col-md-6 mb-3">
+                            <label for="phone_number" class="form-label">
+                                <strong>Nomor Telpon</strong>
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   name="phone_number" 
+                                   id="phone_number"
+                                   class="form-control form-control-lg"
+                                   value="{{ user.phone_number or '' }}"
+                                   required>
+                            <small class="text-muted">Nomor telepon aktif pegawai</small>
+                        </div>
+                    </div>
+
+                    <!-- Row 3: Password -->
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="password" class="form-label">
+                                <strong>Password</strong>
+                                <span class="badge bg-secondary ms-2">Opsional - Kosongkan jika tidak ingin ubah</span>
+                            </label>
+                            <div class="input-group input-group-lg">
+                                <input type="text" 
+                                       name="password" 
+                                       id="password"
+                                       class="form-control"
+                                       placeholder="Biarkan kosong untuk tidak mengubah password"
+                                       value="">
+                                <button class="btn btn-outline-secondary" type="button" id="generateBtn" title="Generate Random Password">
+                                    <i class="fas fa-sync-alt me-1"></i>Generate
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" id="copyBtn" title="Salin Password">
+                                    <i class="fas fa-copy me-1"></i>Salin
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <i class="fas fa-info-circle me-1"></i>Jika ingin reset password, klik Generate kemudian Simpan
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- Info Alert -->
+                    <div class="alert alert-info mb-4">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        <strong>Tips:</strong> Password yang diisi akan di-hash dan disimpan aman. Biarkan kosong jika tidak ingin mengubah password.
+                    </div>
+
+                    <hr>
+
+                    <!-- Buttons -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg fw-bold">
+                            <i class="fas fa-save me-2"></i>Simpan Perubahan
+                        </button>
+                        <a href="{{ url_for('user.get_all_users') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-2"></i>Batal
+                        </a>
+                    </div>
+                </form>
+
+                <!-- Danger Zone -->
+                <hr class="my-4">
+                <div class="alert alert-danger">
+                    <h6 class="alert-heading">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Danger Zone
+                    </h6>
+                    <p class="mb-0">Jika ingin menghapus pegawai ini, klik tombol di bawah:</p>
+                    <button class="btn btn-danger btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#deleteModal">
+                        <i class="fas fa-trash me-2"></i>Hapus Pegawai
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-circle me-2"></i>Konfirmasi Hapus
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Anda yakin ingin menghapus pegawai <strong>{{ user.fullname }}</strong>?</p>
+                <p class="text-danger mb-0">
+                    <i class="fas fa-warning me-2"></i>
+                    Tindakan ini akan menghapus semua data jadwal pegawai dan tidak dapat dibatalkan!
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <a href="{{ url_for('user.delete_user', user_id=user.id) }}" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Ya, Hapus
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Generate random password
+    document.getElementById('generateBtn').addEventListener('click', function() {
+        fetch('{{ url_for("user.api_generate_password") }}')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('password').value = data.password;
+                // Show success feedback
+                const btn = this;
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-outline-secondary');
+                setTimeout(() => {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-outline-secondary');
+                }, 1500);
+            })
+            .catch(error => {
+                alert('Error generating password: ' + error);
+            });
+    });
+
+    // Copy password to clipboard
+    document.getElementById('copyBtn').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const password = passwordField.value;
+        
+        if (!password) {
+            alert('Password masih kosong');
+            return;
+        }
+
+        navigator.clipboard.writeText(password).then(() => {
+            // Show success feedback
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check me-1"></i>Tersalin!';
+            btn.classList.add('btn-success');
+            btn.classList.remove('btn-outline-secondary');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-outline-secondary');
+            }, 1500);
+        }).catch(err => {
+            alert('Gagal menyalin: ' + err);
+        });
+    });
+</script>
+
+{% endblock %}
