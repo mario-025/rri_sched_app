@@ -14,7 +14,7 @@
                     <i class="fas fa-user-plus me-2"></i>Tambah Pegawai Baru
                 </h4>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-3">
 
                 <form method="POST" action="{{ url_for('user.create_user') }}">
                     
@@ -29,7 +29,7 @@
                             <input type="text" 
                                    name="fullname" 
                                    id="fullname"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    placeholder="Contoh: Budi Santoso"
                                    required
                                    autofocus>
@@ -45,7 +45,7 @@
                             <input type="text" 
                                    name="username" 
                                    id="username"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    placeholder="Contoh: budi_santoso"
                                    required>
                             <small class="text-muted">Harus unik (tidak boleh sama)</small>
@@ -63,7 +63,7 @@
                             <input type="email" 
                                    name="email" 
                                    id="email"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    placeholder="Contoh: budi@example.com"
                                    required>
                             <small class="text-muted">Email harus valid & unik</small>
@@ -78,7 +78,7 @@
                             <input type="text" 
                                    name="phone_number" 
                                    id="phone_number"
-                                   class="form-control form-control-lg"
+                                   class="form-control"
                                    placeholder="Contoh: 08123456789"
                                    required>
                             <small class="text-muted">Nomor telepon aktif pegawai</small>
@@ -92,7 +92,7 @@
                                 <strong>Password</strong>
                                 <span class="text-danger">*</span>
                             </label>
-                            <div class="input-group input-group-lg">
+                            <div class="input-group">
                                 <input type="text" 
                                        name="password" 
                                        id="password"

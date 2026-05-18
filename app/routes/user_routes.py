@@ -8,13 +8,30 @@ from app.controllers.user_controller import (
     update_user,
     delete_user,
     user_detail,
-    api_generate_password
+    api_generate_password,
+    api_search_users
 )
 
 user_bp = Blueprint(
     "user",
     __name__
 )
+
+# ============ API Routes (define first, before routes with variables) ============
+
+# Generate random password (API)
+user_bp.route(
+    "/api/generate-password",
+    methods=["GET"]
+)(api_generate_password)
+
+# Live search users (API)
+user_bp.route(
+    "/api/search",
+    methods=["GET"]
+)(api_search_users)
+
+# ============ Regular Routes ============
 
 # List all users
 user_bp.route(
@@ -57,9 +74,3 @@ user_bp.route(
     "/<int:user_id>/delete",
     methods=["POST"]
 )(delete_user)
-
-# Generate random password (API)
-user_bp.route(
-    "/api/generate-password",
-    methods=["GET"]
-)(api_generate_password)

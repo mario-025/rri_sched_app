@@ -6,139 +6,364 @@
 
 {% block content %}
 
-<div class="mb-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+<div class="mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-2">
         <h1 class="mb-0">
             <i class="fas fa-users me-2"></i>Manajemen Pegawai
         </h1>
-        <a href="{{ url_for('user.create_form') }}" class="btn btn-primary btn-lg">
-            <i class="fas fa-user-plus me-2"></i>Tambah Pegawai Baru
+        <a href="{{ url_for('user.create_form') }}" class="btn btn-primary">
+            <i class="fas fa-user-plus me-1"></i>Tambah Pegawai Baru
         </a>
     </div>
 </div>
 
-{% if users %}
-<div class="row">
-    {% for user in users %}
-    <div class="col-md-6 col-lg-4 mb-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <!-- Header -->
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h5 class="card-title mb-1">{{ user.fullname }}</h5>
-                        <p class="card-text text-muted small">@{{ user.username }}</p>
-                    </div>
-                    <span class="badge bg-info">Score: {{ user.score }}</span>
+<!-- Search and Sort Section -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body p-3">
+        <!-- Row 1: Search Input + Sort Dropdown -->
+        <div class="row g-2 mb-2">
+            <!-- Search Input -->
+            <div class="col-md-8">
+                <label for="liveSearch" class="form-label">
+                    <i class="fas fa-search me-1"></i>Cari Pegawai
+                </label>
+                <div class="position-relative">
+                    <input 
+                        type="text" 
+                        class="form-control" 
+                        id="liveSearch" 
+                        placeholder="Cari nama, username, atau email..."
+                        autocomplete="off"
+                    >
+                    <small class="text-muted d-block mt-1">Ketik untuk live search...</small>
                 </div>
+            </div>
 
-                <!-- Contact Info -->
-                <div class="mb-3 pb-3 border-bottom">
-                    <small class="d-block mb-2">
-                        <i class="fas fa-envelope text-primary me-2"></i>
-                        <strong>{{ user.email or '-' }}</strong>
-                    </small>
-                    <small class="d-block">
-                        <i class="fas fa-phone text-success me-2"></i>
-                        <strong>{{ user.phone_number or '-' }}</strong>
-                    </small>
-                </div>
-                
-                <!-- Upcoming Schedules Section -->
-                <div class="mb-3 pb-3 border-bottom">
-                    <h6 class="text-muted mb-2">
-                        <i class="fas fa-calendar-alt me-1"></i>
-                        <small>Jadwal Mendatang</small>
-                    </h6>
-                    {% if user_schedules[user.id] %}
-                        {% for schedule in user_schedules[user.id] %}
-                        <div class="alert alert-light border-start border-3 border-success mb-2 py-2 px-2">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <small class="fw-bold">{{ schedule.shift.shift_name }}</small>
-                                    <br>
-                                    <small class="text-muted">
-                                        {{ schedule.work_date.strftime('%d %b %Y') }}
+            <!-- Sort Dropdown -->
+            <div class="col-md-4">
+                <label for="sortBy" class="form-label">
+                    <i class="fas fa-sort me-1"></i>Urut Berdasarkan
+                </label>
+                <select class="form-select" id="sortBy">
+                    <option value="name_asc">Nama (A-Z)</option>
+                    <option value="name_desc">Nama (Z-A)</option>
+                    <option value="score_asc">Score (Rendah)</option>
+                    <option value="score_desc">Score (Tinggi)</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Loading Indicator (Hidden by default) -->
+        <div id="loadingIndicator" class="d-none mt-2">
+            <small class="text-muted">
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Mencari...
+            </small>
+        </div>
+
+        <!-- Current Filter Status -->
+        <div id="filterStatus" class="d-none mt-2 pt-2 border-top">
+            <small class="text-muted">
+                <i class="fas fa-filter me-1"></i>
+                <span id="filterText"></span>
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Live Search Results Container -->
+<div id="liveResultsContainer">
+    <!-- Results will be rendered here dynamically -->
+</div>
+
+<!-- Default/Static View (shown when no live search is active) -->
+<div id="staticView">
+    {% if users %}
+    <div class="row">
+        {% for user in users %}
+        <div class="col-md-6 col-lg-4 mb-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body p-3">
+                    <!-- Header -->
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div>
+                            <h5 class="card-title mb-0">{{ user.fullname }}</h5>
+                            <p class="card-text text-muted small mb-0">@{{ user.username }}</p>
+                        </div>
+                        <span class="badge bg-info">Score: {{ user.score }}</span>
+                    </div>
+
+                    <!-- Contact Info -->
+                    <div class="mb-2 pb-2 border-bottom">
+                        <small class="d-block mb-1">
+                            <i class="fas fa-envelope text-primary me-1"></i>
+                            {{ user.email or '-' }}
+                        </small>
+                        <small class="d-block">
+                            <i class="fas fa-phone text-success me-1"></i>
+                            {{ user.phone_number or '-' }}
+                        </small>
+                    </div>
+                    
+                    <!-- Upcoming Schedules Section -->
+                    <div class="mb-2 pb-2 border-bottom">
+                        <h6 class="text-muted mb-1">
+                            <i class="fas fa-calendar-alt me-1"></i>Jadwal Mendatang
+                        </h6>
+                        {% if user_schedules[user.id] %}
+                            {% for schedule in user_schedules[user.id] %}
+                            <div class="alert alert-light border-start border-3 border-success mb-1 py-1 px-2">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <small class="fw-bold d-block">{{ schedule.shift.shift_name }}</small>
+                                        <small class="text-muted">
+                                            {{ schedule.work_date.strftime('%d %b %Y') }}
+                                        </small>
+                                    </div>
+                                    <small class="badge bg-success text-nowrap ms-1">
+                                        {{ schedule.shift.start_time.strftime('%H:%M') }}-{{ schedule.shift.end_time.strftime('%H:%M') }}
                                     </small>
                                 </div>
-                                <small class="badge bg-success text-nowrap ms-2">
-                                    {{ schedule.shift.start_time.strftime('%H:%M') }}-{{ schedule.shift.end_time.strftime('%H:%M') }}
-                                </small>
                             </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <small class="text-muted d-block">
-                            <em>Belum ada jadwal</em>
-                        </small>
-                    {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <small class="text-muted d-block">
+                                <em>Belum ada jadwal</em>
+                            </small>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-1">
+                        <a href="{{ url_for('user.user_detail', user_id=user.id) }}" 
+                           class="btn btn-sm btn-info flex-grow-1">
+                            <i class="fas fa-eye me-1"></i>Detail
+                        </a>
+                        <a href="{{ url_for('user.edit_form', user_id=user.id) }}" 
+                           class="btn btn-sm btn-warning">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        <button type="button" class="btn btn-sm btn-danger" 
+                                data-bs-toggle="modal" data-bs-target="#deleteUserModal-{{ user.id }}">
+                            <i class="fas fa-trash me-1"></i>Hapus
+                        </button>
+                    </div>
                 </div>
-                
-                <!-- Action Buttons -->
-                <div class="d-flex gap-2">
-                    <a href="{{ url_for('user.user_detail', user_id=user.id) }}" 
-                       class="btn btn-sm btn-info flex-grow-1">
-                        <i class="fas fa-eye me-1"></i>Detail
-                    </a>
-                    <a href="{{ url_for('user.edit_form', user_id=user.id) }}" 
-                       class="btn btn-sm btn-warning">
-                        <i class="fas fa-edit me-1"></i>Edit
-                    </a>
-                    <button type="button" class="btn btn-sm btn-danger" 
-                            data-bs-toggle="modal" data-bs-target="#deleteUserModal-{{ user.id }}">
-                        <i class="fas fa-trash me-1"></i>Hapus
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Modals (Outside of loop) -->
+    {% for user in users %}
+    <!-- Modal Delete -->
+    <div class="modal fade" id="deleteUserModal-{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel-{{ user.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="deleteUserModalLabel-{{ user.id }}">
+                        <i class="fas fa-exclamation-circle me-2"></i>Hapus Pegawai
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p><strong>⚠️ Perhatian!</strong></p>
+                    <p>Anda akan menghapus pegawai: <strong>{{ user.fullname }}</strong></p>
+                    <p class="mb-2">Data yang akan dihapus:</p>
+                    <ul class="mb-2">
+                        <li><small><i class="fas fa-user me-1"></i>Username: <code>{{ user.username }}</code></small></li>
+                        <li><small><i class="fas fa-envelope me-1"></i>Email: <code>{{ user.email }}</code></small></li>
+                        <li><small><i class="fas fa-phone me-1"></i>Telepon: <code>{{ user.phone_number }}</code></small></li>
+                        <li><small><i class="fas fa-star me-1"></i>Score: <code>{{ user.score }}</code></small></li>
+                        <li><small><i class="fas fa-calendar me-1"></i>Semua jadwal kerja</small></li>
+                    </ul>
+                    <p class="mb-0 text-danger">
+                        <i class="fas fa-warning me-1"></i><small>Aksi ini tidak bisa dibatalkan!</small>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
+                        Batal
                     </button>
+                    <a href="{{ url_for('user.delete_user', user_id=user.id) }}" class="btn btn-danger btn-sm">
+                        <i class="fas fa-trash me-1"></i>Ya, Hapus
+                    </a>
                 </div>
             </div>
         </div>
     </div>
     {% endfor %}
-</div>
-
-<!-- Modals (Outside of loop) -->
-{% for user in users %}
-<!-- Modal Delete -->
-<div class="modal fade" id="deleteUserModal-{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel-{{ user.id }}" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteUserModalLabel-{{ user.id }}">
-                    <i class="fas fa-exclamation-circle me-2"></i>Hapus Pegawai
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p><strong>⚠️ Perhatian!</strong></p>
-                <p>Anda akan menghapus pegawai: <strong>{{ user.fullname }}</strong></p>
-                <p class="mb-2">Data yang akan dihapus:</p>
-                <ul class="mb-3">
-                    <li><i class="fas fa-user me-2"></i>Username: <code>{{ user.username }}</code></li>
-                    <li><i class="fas fa-envelope me-2"></i>Email: <code>{{ user.email }}</code></li>
-                    <li><i class="fas fa-phone me-2"></i>Telepon: <code>{{ user.phone_number }}</code></li>
-                    <li><i class="fas fa-star me-2"></i>Score: <code>{{ user.score }}</code></li>
-                    <li><i class="fas fa-calendar me-2"></i>Semua jadwal kerja</li>
-                </ul>
-                <p class="mb-0 text-danger">
-                    <i class="fas fa-warning me-2"></i>Aksi ini tidak bisa dibatalkan!
-                </p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Batal
-                </button>
-                <a href="{{ url_for('user.delete_user', user_id=user.id) }}" class="btn btn-danger">
-                    <i class="fas fa-trash me-2"></i>Ya, Hapus
-                </a>
-            </div>
-        </div>
+    {% else %}
+    <!-- No Results Message -->
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle me-1"></i><small>
+        Belum ada data pegawai. <a href="{{ url_for('user.create_form') }}">Tambah pegawai baru</a></small>
     </div>
+    {% endif %}
 </div>
-{% endfor %}
-{% else %}
-<div class="alert alert-info">
-    <i class="fas fa-info-circle me-2"></i>
-    Belum ada data pegawai. <a href="{{ url_for('user.create_form') }}">Tambah pegawai baru</a>
-</div>
-{% endif %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const liveSearchInput = document.getElementById('liveSearch');
+    const sortSelect = document.getElementById('sortBy');
+    const liveResultsContainer = document.getElementById('liveResultsContainer');
+    const staticView = document.getElementById('staticView');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const filterStatus = document.getElementById('filterStatus');
+    const filterText = document.getElementById('filterText');
+    
+    let searchTimeout;
+    
+    // Debounce function untuk membatasi API calls
+    function debounce(func, delay) {
+        return function(...args) {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => func(...args), delay);
+        };
+    }
+    
+    // Render user card HTML
+    function renderUserCard(user) {
+        let schedulesHtml = '';
+        if (user.schedules && user.schedules.length > 0) {
+            user.schedules.forEach(schedule => {
+                schedulesHtml += `
+                    <div class="alert alert-light border-start border-3 border-success mb-1 py-1 px-2">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <small class="fw-bold d-block">${schedule.shift_name}</small>
+                                <small class="text-muted">${schedule.work_date}</small>
+                            </div>
+                            <small class="badge bg-success text-nowrap ms-1">
+                                ${schedule.start_time}-${schedule.end_time}
+                            </small>
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            schedulesHtml = '<small class="text-muted d-block"><em>Belum ada jadwal</em></small>';
+        }
+        
+        return `
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <h5 class="card-title mb-0">${user.fullname}</h5>
+                                <p class="card-text text-muted small mb-0">@${user.username}</p>
+                            </div>
+                            <span class="badge bg-info">Score: ${user.score}</span>
+                        </div>
+
+                        <div class="mb-2 pb-2 border-bottom">
+                            <small class="d-block mb-1">
+                                <i class="fas fa-envelope text-primary me-1"></i>
+                                ${user.email || '-'}
+                            </small>
+                            <small class="d-block">
+                                <i class="fas fa-phone text-success me-1"></i>
+                                ${user.phone_number || '-'}
+                            </small>
+                        </div>
+                        
+                        <div class="mb-2 pb-2 border-bottom">
+                            <h6 class="text-muted mb-1">
+                                <i class="fas fa-calendar-alt me-1"></i>Jadwal Mendatang
+                            </h6>
+                            ${schedulesHtml}
+                        </div>
+                        
+                        <div class="d-flex gap-1">
+                            <a href="/users/${user.id}/detail" class="btn btn-sm btn-info flex-grow-1">
+                                <i class="fas fa-eye me-1"></i>Detail
+                            </a>
+                            <a href="/users/${user.id}/edit" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit me-1"></i>Edit
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteUserModal-${user.id}">
+                                <i class="fas fa-trash me-1"></i>Hapus
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Perform live search
+    function performLiveSearch() {
+        const searchQuery = liveSearchInput.value.trim();
+        const sortBy = sortSelect.value;
+        
+        if (!searchQuery) {
+            // Jika search kosong, tampilkan static view
+            liveResultsContainer.innerHTML = '';
+            staticView.style.display = 'block';
+            loadingIndicator.classList.add('d-none');
+            filterStatus.classList.add('d-none');
+            return;
+        }
+        
+        // Show loading indicator
+        loadingIndicator.classList.remove('d-none');
+        staticView.style.display = 'none';
+        
+        // Update filter status
+        filterStatus.classList.remove('d-none');
+        filterText.innerHTML = `<strong>Pencarian:</strong> "${searchQuery}"`;
+        
+        // Fetch data from API
+        fetch(`/users/api/search?q=${encodeURIComponent(searchQuery)}&sort_by=${sortBy}`)
+            .then(response => response.json())
+            .then(users => {
+                loadingIndicator.classList.add('d-none');
+                
+                if (users.length === 0) {
+                    liveResultsContainer.innerHTML = `
+                        <div class="alert alert-warning" role="alert">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-search me-2"></i>Tidak ada hasil pencarian
+                            </h5>
+                            <p class="mb-1"><small>Pencarian untuk "<strong>${searchQuery}</strong>" tidak menemukan hasil.</small></p>
+                        </div>
+                    `;
+                } else {
+                    let html = '<div class="row">';
+                    users.forEach(user => {
+                        html += renderUserCard(user);
+                    });
+                    html += '</div>';
+                    liveResultsContainer.innerHTML = html;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                loadingIndicator.classList.add('d-none');
+                liveResultsContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="fas fa-exclamation-circle me-2"></i>Terjadi kesalahan saat mencari data
+                    </div>
+                `;
+            });
+    }
+    
+    // Add event listeners
+    liveSearchInput.addEventListener('input', debounce(performLiveSearch, 300));
+    sortSelect.addEventListener('change', performLiveSearch);
+    
+    // Clear search when input is cleared
+    liveSearchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            liveSearchInput.value = '';
+            performLiveSearch();
+        }
+    });
+});
+</script>
 {% endblock %}

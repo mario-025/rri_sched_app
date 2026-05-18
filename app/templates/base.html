@@ -103,6 +103,209 @@
         .badge-role {
             font-size: 0.75rem;
         }
+
+        /* Global font size reduction */
+        html, body {
+            font-size: 0.9rem;
+        }
+
+        h1 { font-size: 1.5rem; }
+        h2 { font-size: 1.25rem; }
+        h3 { font-size: 1.1rem; }
+        h4 { font-size: 1rem; }
+        h5 { font-size: 0.95rem; }
+        h6 { font-size: 0.85rem; }
+
+        .form-label { font-size: 0.85rem; }
+        .form-control, .form-select, .input-group {
+            font-size: 0.9rem;
+        }
+
+        .btn, .btn-sm, .btn-lg {
+            font-size: 0.85rem;
+        }
+
+        .btn-lg {
+            padding: 0.5rem 1rem;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+        }
+
+        .btn {
+            padding: 0.4rem 0.8rem;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+        }
+
+        .card-text {
+            font-size: 0.9rem;
+        }
+
+        small, .small {
+            font-size: 0.8rem;
+        }
+
+        .navbar-brand {
+            font-size: 1.1rem;
+        }
+
+        .nav-link {
+            font-size: 0.9rem;
+        }
+
+        .alert {
+            font-size: 0.9rem;
+        }
+
+        .alert-heading {
+            font-size: 0.95rem;
+        }
+
+        .table {
+            font-size: 0.85rem;
+        }
+
+        .list-group-item {
+            font-size: 0.9rem;
+        }
+
+        .modal-title {
+            font-size: 1rem;
+        }
+
+        .modal-body {
+            font-size: 0.9rem;
+        }
+
+        .pagination {
+            font-size: 0.85rem;
+        }
+
+        .dropdown-item {
+            font-size: 0.9rem;
+        }
+
+        /* Floating Help Button */
+        .floating-help-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 999;
+        }
+
+        .floating-help-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .floating-help-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Tutorial Modal Styling */
+        .modal-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+
+        .modal-header .btn-close {
+            filter: brightness(0) invert(1);
+        }
+
+        .tutorial-step {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tutorial-step:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .tutorial-step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .tutorial-step h5 {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.7rem;
+        }
+
+        .tutorial-step-content {
+            margin-left: 42px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .tutorial-step-content ul {
+            margin: 0.5rem 0;
+            padding-left: 1.2rem;
+        }
+
+        .tutorial-step-content li {
+            margin-bottom: 0.4rem;
+        }
+
+        .tutorial-highlight {
+            background-color: #fff3cd;
+            padding: 0.75rem;
+            border-left: 4px solid #ffc107;
+            margin: 0.7rem 0;
+            border-radius: 4px;
+        }
+
+        .tutorial-tip {
+            background-color: #e7f3ff;
+            padding: 0.75rem;
+            border-left: 4px solid #0066cc;
+            margin: 0.7rem 0;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .tutorial-tip strong {
+            color: #0066cc;
+        }
+
+        .modal-body {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
     </style>
 
 </head>
@@ -240,6 +443,313 @@
         {% block content %}
         {% endblock %}
     </div>
+
+    <!-- Floating Help Button (Visible only for admins) -->
+    {% if session.get('admin_id') %}
+    <button class="floating-help-btn" data-bs-toggle="modal" data-bs-target="#tutorialModal" title="Buka Tutorial Pembuatan Jadwal">
+        <i class="fas fa-question"></i>
+    </button>
+    {% endif %}
+
+    <!-- Tutorial Modal -->
+    {% if session.get('admin_id') %}
+    <div class="modal fade" id="tutorialModal" tabindex="-1" aria-labelledby="tutorialModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tutorialModalLabel">
+                        <i class="fas fa-graduation-cap me-2"></i>Tutorial: Membuat Jadwal Kerja
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Introduction -->
+                    <div class="alert alert-info mb-4">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Panduan Lengkap Membuat Jadwal Kerja
+                        </h6>
+                        <p class="mb-0">Tutorial ini menjelaskan langkah demi langkah yang harus Anda lakukan sebelum dan saat membuat jadwal kerja. Persiapan data adalah kunci utama untuk menghasilkan jadwal yang baik dan adil.</p>
+                    </div>
+
+                    <!-- PERSIAPAN SECTION HEADER -->
+                    <h5 class="mb-3 pb-2 border-bottom">
+                        <i class="fas fa-list-check me-2"></i>TAHAP PERSIAPAN - Siapkan Data Terlebih Dahulu
+                    </h5>
+
+                    <!-- Step 1: User (Pegawai) -->
+                    <div class="tutorial-step">
+                        <h5>
+                            <span class="tutorial-step-number">1</span>
+                            Manajemen User (Pegawai)
+                        </h5>
+                        <div class="tutorial-step-content">
+                            <p><strong>Apa itu User?</strong></p>
+                            <p>User adalah data pegawai yang akan dijadwalkan. Setiap pegawai harus terdaftar di sistem dengan informasi lengkap sebelum dapat ditugaskan ke jadwal.</p>
+                            
+                            <p class="mt-3"><strong>Informasi yang Diperlukan untuk Setiap Pegawai:</strong></p>
+                            <ul>
+                                <li><strong>Nama Lengkap:</strong> Nama asli pegawai</li>
+                                <li><strong>Username:</strong> Identitas unik pegawai di sistem (tidak boleh duplikat)</li>
+                                <li><strong>Email:</strong> Email pegawai untuk notifikasi (tidak boleh duplikat)</li>
+                                <li><strong>Nomor Telpon:</strong> Kontak pegawai</li>
+                                <li><strong>Password:</strong> Akses login pegawai di sistem (dapat di-generate otomatis)</li>
+                            </ul>
+
+                            <p class="mt-3"><strong>Cara Menambah User:</strong></p>
+                            <ol>
+                                <li>Buka menu <strong>Konfigurasi → Manajemen Pegawai</strong></li>
+                                <li>Klik tombol <strong>Tambah Pegawai Baru</strong></li>
+                                <li>Isi semua informasi yang diminta (nama, username, email, nomor telpon)</li>
+                                <li>Klik tombol <strong>Generate</strong> untuk membuat password otomatis, atau masukkan manual</li>
+                                <li>Klik <strong>Simpan</strong> untuk menyimpan data pegawai</li>
+                            </ol>
+
+                            <div class="tutorial-highlight">
+                                <strong>⚠️ Penting:</strong> Pastikan semua pegawai yang akan dijadwalkan sudah terdaftar di sistem. Pegawai yang tidak terdaftar tidak dapat dimasukkan ke jadwal.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2: Shift -->
+                    <div class="tutorial-step">
+                        <h5>
+                            <span class="tutorial-step-number">2</span>
+                            Manajemen Shift
+                        </h5>
+                        <div class="tutorial-step-content">
+                            <p><strong>Apa itu Shift?</strong></p>
+                            <p>Shift adalah penggolongan waktu kerja dalam satu hari. Setiap shift mendefinisikan jam berapa pegawai mulai bekerja dan jam berapa selesai.</p>
+
+                            <p class="mt-3"><strong>Contoh Shift Standar:</strong></p>
+                            <ul>
+                                <li><strong>Pagi:</strong> 08:00 - 16:00 (8 jam)</li>
+                                <li><strong>Siang/Malam:</strong> 16:00 - 00:00 (8 jam)</li>
+                                <li><strong>Malam/Pagi:</strong> 00:00 - 08:00 (8 jam)</li>
+                            </ul>
+
+                            <p class="mt-3"><strong>Cara Membuat Shift Baru:</strong></p>
+                            <ol>
+                                <li>Buka menu <strong>Konfigurasi → Manajemen Shift</strong></li>
+                                <li>Klik tombol <strong>Tambah Shift Baru</strong></li>
+                                <li>Masukkan <strong>nama shift</strong> (contoh: "Pagi", "Siang", "Malam")</li>
+                                <li>Tentukan <strong>waktu mulai</strong> dan <strong>waktu selesai</strong></li>
+                                <li>Klik <strong>Simpan</strong></li>
+                            </ol>
+
+                            <div class="tutorial-highlight">
+                                <strong>⚠️ Penting:</strong> Tentukan shift apa saja yang akan digunakan dalam organisasi Anda. Pastikan semua shift sudah dibuat sebelum membuat jadwal.
+                            </div>
+
+                            <div class="tutorial-tip mt-2">
+                                <strong>💡 Tips:</strong> Untuk distribusi beban kerja yang merata, gunakan shift yang seimbang. Misalnya, jika ada 30 pegawai dan 3 shift, masing-masing shift akan mendapat sekitar 10 pegawai.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Shift Pattern -->
+                    <div class="tutorial-step">
+                        <h5>
+                            <span class="tutorial-step-number">3</span>
+                            Manajemen Pola Shift (Shift Pattern)
+                        </h5>
+                        <div class="tutorial-step-content">
+                            <p><strong>Apa itu Pola Shift?</strong></p>
+                            <p>Pola Shift adalah aturan yang mendefinisikan bagaimana shift-shift akan didistribusikan ke pegawai. Sistem menggunakan pola ini untuk otomatis menempatkan pegawai ke shift yang tepat saat membuat jadwal.</p>
+
+                            <p class="mt-3"><strong>Bagaimana Pola Shift Bekerja?</strong></p>
+                            <p>Ketika Anda membuat jadwal, sistem akan:</p>
+                            <ol>
+                                <li>Membaca pola shift yang Anda pilih</li>
+                                <li>Membaca daftar pegawai yang ada</li>
+                                <li>Secara otomatis mengalokasikan pegawai ke shift sesuai dengan pola</li>
+                                <li>Memastikan distribusi yang merata dan adil dengan mempertimbangkan skor pegawai</li>
+                            </ol>
+
+                            <p class="mt-3"><strong>Contoh Pola Shift:</strong></p>
+                            <ul>
+                                <li><strong>Rotating Pattern:</strong> Pegawai bergilir shift (hari pertama pagi, kedua siang, ketiga malam, dst)</li>
+                                <li><strong>Fixed Pattern:</strong> Pegawai mendapat shift yang sama setiap hari</li>
+                                <li><strong>Custom Pattern:</strong> Kombinasi custom sesuai kebutuhan bisnis</li>
+                            </ul>
+
+                            <p class="mt-3"><strong>Cara Membuat Pola Shift Baru:</strong></p>
+                            <ol>
+                                <li>Buka menu <strong>Konfigurasi → Manajemen Pola Shift</strong></li>
+                                <li>Klik tombol <strong>Tambah Pola Shift Baru</strong></li>
+                                <li>Masukkan <strong>nama pola</strong> (contoh: "Rotating 3 Shift")</li>
+                                <li>Tentukan <strong>urutan shift</strong> dalam pola:
+                                    <ul style="margin-top: 0.5rem; font-size: 0.9rem;">
+                                        <li>Hari ke-1: Pagi</li>
+                                        <li>Hari ke-2: Siang</li>
+                                        <li>Hari ke-3: Malam</li>
+                                        <li>(Kemudian berulang ke Pagi lagi)</li>
+                                    </ul>
+                                </li>
+                                <li>Klik <strong>Simpan</strong></li>
+                            </ol>
+
+                            <div class="tutorial-highlight">
+                                <strong>⚠️ Penting:</strong> Pola shift harus sesuai dengan shift yang sudah Anda buat di Manajemen Shift. Pastikan tidak ada shift dalam pola yang tidak ada di sistem.
+                            </div>
+
+                            <div class="tutorial-tip mt-2">
+                                <strong>💡 Tips:</strong> Untuk memulai, buat pola rotating 3 shift (Pagi → Siang → Malam → Pagi). Ini adalah pola paling umum untuk shift kerja yang merata dan adil.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- GENERATE JADWAL SECTION HEADER -->
+                    <h5 class="mb-3 pb-2 border-bottom mt-4">
+                        <i class="fas fa-rocket me-2"></i>TAHAP EKSEKUSI - Generate Jadwal
+                    </h5>
+
+                    <!-- Step 4: Generate Schedule -->
+                    <div class="tutorial-step">
+                        <h5>
+                            <span class="tutorial-step-number">4</span>
+                            Generate Jadwal Kerja
+                        </h5>
+                        <div class="tutorial-step-content">
+                            <p><strong>Prasyarat:</strong> Pastikan Anda sudah menyelesaikan 3 langkah persiapan di atas:</p>
+                            <ul>
+                                <li>✓ Minimal 1 pegawai sudah terdaftar</li>
+                                <li>✓ Minimal 1 shift sudah dikonfigurasi</li>
+                                <li>✓ Minimal 1 pola shift sudah dibuat</li>
+                            </ul>
+
+                            <p class="mt-3"><strong>Langkah-langkah Generate Jadwal:</strong></p>
+                            <ol>
+                                <li>Buka menu <strong>Schedule → Generate Jadwal</strong></li>
+                                <li>Tentukan <strong>Rentang Tanggal:</strong>
+                                    <ul style="margin-top: 0.3rem; font-size: 0.9rem;">
+                                        <li>Tanggal Mulai: Hari pertama periode jadwal</li>
+                                        <li>Tanggal Selesai: Hari terakhir periode jadwal</li>
+                                        <li>Contoh: 1 Mei 2026 - 31 Mei 2026 (satu bulan penuh)</li>
+                                    </ul>
+                                </li>
+                                <li>Pilih <strong>Shift</strong> yang akan digunakan:
+                                    <ul style="margin-top: 0.3rem; font-size: 0.9rem;">
+                                        <li>Centang semua shift yang ingin digunakan dalam jadwal ini</li>
+                                        <li>Jika Anda centang Pagi, Siang, dan Malam, maka ketiga shift ini akan digunakan</li>
+                                    </ul>
+                                </li>
+                                <li>Pilih <strong>Pola Shift</strong> yang akan menentukan distribusi</li>
+                                <li>Klik tombol <strong>Preview</strong> untuk melihat hasil sebelum menyimpan</li>
+                                <li>Periksa dengan teliti di preview (lihat penjelasan step berikutnya)</li>
+                                <li>Jika sudah puas, klik <strong>Simpan Jadwal</strong></li>
+                            </ol>
+
+                            <div class="tutorial-tip">
+                                <strong>💡 Tips:</strong> Jangan langsung simpan tanpa preview. Luangkan waktu untuk memastikan distribusi pegawai sudah merata dan sesuai harapan.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Preview -->
+                    <div class="tutorial-step">
+                        <h5>
+                            <span class="tutorial-step-number">5</span>
+                            Preview dan Verifikasi Jadwal
+                        </h5>
+                        <div class="tutorial-step-content">
+                            <p><strong>Apa yang Harus Diperiksa di Preview?</strong></p>
+                            <ul>
+                                <li><strong>Distribusi Pegawai:</strong> Apakah setiap pegawai sudah mendapat penugasan shift?</li>
+                                <li><strong>Keseimbangan:</strong> Apakah shift Pagi, Siang, Malam terdistribusi merata?</li>
+                                <li><strong>Tidak Ada Duplikat:</strong> Apakah ada pegawai yang ditugaskan 2x di hari yang sama? (Harus tidak ada)</li>
+                                <li><strong>Periode Benar:</strong> Apakah tanggal jadwal sesuai dengan periode yang Anda inginkan?</li>
+                            </ul>
+
+                            <p class="mt-3"><strong>Visualisasi Preview:</strong></p>
+                            <ul>
+                                <li>Gunakan tampilan <strong>Kalender</strong> untuk melihat jadwal bulanan</li>
+                                <li>Gunakan tampilan <strong>Tabel/List</strong> untuk detail pershift</li>
+                                <li>Hover pada hari untuk melihat pegawai mana yang dijadwalkan</li>
+                            </ul>
+
+                            <div class="tutorial-highlight">
+                                <strong>⚠️ Jangan Lewatkan:</strong> Jika ada yang terlihat salah di preview, jangan langsung simpan! Kembali dan ubah konfigurasi sebelum menciptakan jadwal yang bermasalah.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 6: Finalize -->
+                    <div class="tutorial-step">
+                        <h5>
+                            <span class="tutorial-step-number">6</span>
+                            Simpan & Aktifkan Jadwal
+                        </h5>
+                        <div class="tutorial-step-content">
+                            <p><strong>Setelah Preview Disetujui:</strong></p>
+                            <ol>
+                                <li>Klik tombol <strong>Simpan Jadwal</strong> di preview</li>
+                                <li>Sistem akan menyimpan jadwal ke database</li>
+                                <li>Jadwal akan langsung <strong>aktif dan tersedia</strong> untuk pegawai</li>
+                                <li>Pegawai dapat melihat jadwal mereka di dashboard pribadi mereka</li>
+                            </ol>
+
+                            <p class="mt-3"><strong>Setelah Jadwal Tersimpan:</strong></p>
+                            <ul>
+                                <li>✓ Pegawai dapat melihat jadwal di menu <strong>Dashboard</strong></li>
+                                <li>✓ Pegawai dapat melihat shift mereka dalam <strong>Jadwal Saya</strong></li>
+                                <li>✓ Kalender akan menampilkan shift yang sudah dijadwalkan</li>
+                                <li>✓ Notifikasi akan dikirim kepada pegawai tentang jadwal mereka</li>
+                            </ul>
+
+                            <div class="tutorial-tip">
+                                <strong>💡 Tips:</strong> Informasikan jadwal kepada pegawai sebelum jadwal berlaku. Berikan waktu yang cukup untuk penyesuaian, minimal 1 minggu sebelumnya.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Best Practices Section -->
+                    <h5 class="mb-3 pb-2 border-bottom mt-4">
+                        <i class="fas fa-lightbulb me-2"></i>Tips & Best Practices
+                    </h5>
+                    <div class="tutorial-step" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                        <div class="tutorial-step-content" style="margin-left: 0;">
+                            <div class="tutorial-tip mb-2">
+                                <strong>📋 Kelengkapan Data:</strong> Investasi waktu untuk mempersiapkan data dengan baik. Jadwal yang baik dimulai dari data yang lengkap dan akurat.
+                            </div>
+                            <div class="tutorial-tip mb-2">
+                                <strong>🔄 Update Berkala:</strong> Lakukan pembaruan jadwal sesuai siklus kerja Anda (mingguan, dua mingguan, atau bulanan) untuk keseimbangan yang berkelanjutan.
+                            </div>
+                            <div class="tutorial-tip mb-2">
+                                <strong>⚖️ Keadilan Distribusi:</strong> Sistem menggunakan skor pegawai untuk memastikan distribusi yang adil. Monitor skor untuk memastikan tidak ada pegawai yang selalu mendapat shift yang sama.
+                            </div>
+                            <div class="tutorial-tip mb-2">
+                                <strong>📞 Komunikasi Terbuka:</strong> Biarkan pegawai tahu tentang sistem penjadwalan ini. Transparansi meningkatkan kepercayaan dan penerimaan.
+                            </div>
+                            <div class="tutorial-tip">
+                                <strong>🔧 Testing:</strong> Saat pertama kali, coba generate jadwal untuk periode pendek (1 minggu) untuk memastikan pola dan konfigurasi berjalan dengan benar sebelum melanjutkan ke periode yang lebih panjang.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Common Issues Section -->
+                    <div class="alert alert-warning mt-4 mb-0">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Jika Ada Masalah
+                        </h6>
+                        <ul class="mb-0" style="font-size: 0.9rem;">
+                            <li><strong>Tidak bisa membuat jadwal:</strong> Periksa apakah semua 3 persiapan sudah dilakukan (user, shift, pola shift).</li>
+                            <li><strong>Jadwal error atau blank:</strong> Verifikasi bahwa shift dalam pola shift sesuai dengan shift yang ada di sistem.</li>
+                            <li><strong>Distribusi tidak merata:</strong> Cek skor pegawai dan pastikan jumlah pegawai cukup untuk shift yang dipilih.</li>
+                            <li><strong>Pegawai tidak melihat jadwal:</strong> Minta mereka logout/login ulang atau refresh browser.</li>
+                            <li><strong>Ingin mengubah jadwal yang sudah disimpan:</strong> Hubungi admin atau hapus jadwal terlebih dahulu sebelum membuat yang baru.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                    <a href="{{ url_for('schedule.schedule_form') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus-circle me-1"></i>Buat Jadwal Sekarang
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>

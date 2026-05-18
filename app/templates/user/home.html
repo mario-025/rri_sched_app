@@ -103,15 +103,75 @@
         </div>
     </div>
     
-    <!-- Quick Links -->
-    <div class="row mt-4">
+    <!-- Calendar Section -->
+    <div class="row mt-5">
         <div class="col-md-12">
-            <a href="{{ url_for('user_profile.user_profile') }}" class="btn btn-outline-primary me-2">
-                <i class="fas fa-user me-2"></i>Lihat Profil Saya
-            </a>
-            <a href="{{ url_for('user_profile.user_my_schedules') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-calendar me-2"></i>Semua Jadwal Saya
-            </a>
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-calendar-alt me-2"></i>Kalender Jadwal Kerja
+                        </h5>
+                        <div>
+                            <small class="text-white-50">{{ month_name }} {{ year }}</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Min</th>
+                                    <th>Sen</th>
+                                    <th>Sel</th>
+                                    <th>Rab</th>
+                                    <th>Kam</th>
+                                    <th>Jum</th>
+                                    <th>Sab</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for week in calendar %}
+                                <tr style="height: 90px;">
+                                    {% for day in week %}
+                                    <td class="align-top" style="vertical-align: top;">
+                                        {% if day == 0 %}
+                                            <span class="text-muted small">-</span>
+                                        {% else %}
+                                            <div class="fw-bold mb-2">{{ day }}</div>
+                                            
+                                            {% if day in schedule_map %}
+                                                {% set work_date = schedule_map[day] %}
+                                                <div class="badge bg-success mb-1" style="font-size: 0.75rem; display: inline-block;">
+                                                    {{ work_date.shift.shift_name }}
+                                                </div>
+                                                <small class="d-block text-muted" style="font-size: 0.7rem;">
+                                                    {{ work_date.shift.start_time.strftime('%H:%M') }}-{{ work_date.shift.end_time.strftime('%H:%M') }}
+                                                </small>
+                                            {% else %}
+                                                <small class="text-muted" style="font-size: 0.75rem;">—</small>
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Legend -->
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="d-block mb-2">
+                            <span class="badge bg-success">Jadwal Kerja</span>
+                        </small>
+                        <small class="text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Warna hijau menunjukkan hari dengan jadwal kerja
+                        </small>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

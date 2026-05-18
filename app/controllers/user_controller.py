@@ -19,8 +19,33 @@ def generate_random_password(length=16):
 @login_required
 @admin_only
 def get_all_users():
-    """Get all users with upcoming schedules"""
-    users = User.query.order_by(User.fullname).all()
+    """Get all users with upcoming schedules, support search and sort"""
+    # Get search and sort parameters
+    search_query = request.args.get('search', '').strip()
+    sort_by = request.args.get('sort_by', 'name_asc')  # name_asc, name_desc, score_asc, score_desc
+    
+    # Build query
+    query = User.query
+    
+    # Apply search filter
+    if search_query:
+        query = query.filter(
+            User.fullname.ilike(f'%{search_query}%') |
+            User.username.ilike(f'%{search_query}%') |
+            User.email.ilike(f'%{search_query}%')
+        )
+    
+    # Apply sorting
+    if sort_by == 'name_desc':
+        query = query.order_by(User.fullname.desc())
+    elif sort_by == 'score_asc':
+        query = query.order_by(User.score.asc())
+    elif sort_by == 'score_desc':
+        query = query.order_by(User.score.desc())
+    else:  # default: name_asc
+        query = query.order_by(User.fullname.asc())
+    
+    users = query.all()
     
     # Prepare upcoming schedules for each user
     now = datetime.now()
@@ -35,7 +60,13 @@ def get_all_users():
         ).order_by(Schedule.work_date).limit(3).all()
         user_schedules[user.id] = upcoming
     
-    return render_template('admin/users/index.html', users=users, user_schedules=user_schedules)
+    return render_template(
+        'admin/users/index.html', 
+        users=users, 
+        user_schedules=user_schedules,
+        search_query=search_query,
+        sort_by=sort_by
+    )
 
 @login_required
 @admin_only
@@ -238,3 +269,68 @@ def api_generate_password():
     """Generate random password via API"""
     password = generate_random_password()
     return jsonify({'password': password})
+
+@login_required
+@admin_only
+def api_search_users():
+    """API endpoint untuk live search users"""
+    search_query = request.args.get('q', '').strip()
+    sort_by = request.args.get('sort_by', 'name_asc')
+    
+    if not search_query or len(search_query) < 1:
+        return jsonify([])
+    
+    # Build query
+    query = User.query
+    
+    # Apply search filter
+    query = query.filter(
+        User.fullname.ilike(f'%{search_query}%') |
+        User.username.ilike(f'%{search_query}%') |
+        User.email.ilike(f'%{search_query}%')
+    )
+    
+    # Apply sorting
+    if sort_by == 'name_desc':
+        query = query.order_by(User.fullname.desc())
+    elif sort_by == 'score_asc':
+        query = query.order_by(User.score.asc())
+    elif sort_by == 'score_desc':
+        query = query.order_by(User.score.desc())
+    else:  # default: name_asc
+        query = query.order_by(User.fullname.asc())
+    
+    users = query.all()
+    
+    # Prepare upcoming schedules for each user
+    now = datetime.now()
+    result = []
+    
+    for user in users:
+        # Get next 3 upcoming schedules
+        upcoming = Schedule.query.filter_by(user_id=user.id).options(
+            db.joinedload(Schedule.shift)
+        ).filter(
+            Schedule.work_date >= now.date()
+        ).order_by(Schedule.work_date).limit(3).all()
+        
+        schedules_data = []
+        for schedule in upcoming:
+            schedules_data.append({
+                'shift_name': schedule.shift.shift_name,
+                'work_date': schedule.work_date.strftime('%d %b %Y'),
+                'start_time': schedule.shift.start_time.strftime('%H:%M'),
+                'end_time': schedule.shift.end_time.strftime('%H:%M')
+            })
+        
+        result.append({
+            'id': user.id,
+            'fullname': user.fullname,
+            'username': user.username,
+            'email': user.email,
+            'phone_number': user.phone_number,
+            'score': user.score,
+            'schedules': schedules_data
+        })
+    
+    return jsonify(result)

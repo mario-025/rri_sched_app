@@ -1,4 +1,5 @@
 import datetime
+from calendar import monthcalendar, month_name
 from flask import render_template, redirect, url_for, session
 from app.models.schedule import Schedule
 from app.models.shift import Shift
@@ -82,6 +83,24 @@ def user_home():
                 Schedule.work_date.asc()
             ).all()
         
+        # Get calendar data for current month
+        now = datetime.datetime.now()
+        cal = monthcalendar(now.year, now.month)
+        
+        # Get all schedules for current month
+        all_schedules = Schedule.query.options(
+            db.joinedload(Schedule.shift)
+        ).filter(
+            Schedule.user_id == user_id,
+            db.extract('year', Schedule.work_date) == now.year,
+            db.extract('month', Schedule.work_date) == now.month
+        ).all()
+        
+        # Map schedules by date (date as key)
+        schedule_map = {}
+        for s in all_schedules:
+            schedule_map[s.work_date.day] = s
+        
         return render_template(
             'user/home.html',
             user=user,
@@ -89,7 +108,12 @@ def user_home():
             current_shift_status=current_shift_status,
             upcoming_schedules=upcoming_schedules,
             today=today,
-            current_time=current_time
+            current_time=current_time,
+            calendar=cal,
+            year=now.year,
+            month=now.month,
+            month_name=month_name[now.month],
+            schedule_map=schedule_map
         )
     
     except Exception as e:
