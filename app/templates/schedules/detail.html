@@ -31,6 +31,7 @@
                     <th>No</th>
                     <th>Shift</th>
                     <th>Jam Kerja</th>
+                    <th>Jenis Jadwal</th>
                     <th>Karyawan</th>
                     <th>Aksi</th>
                 </tr>
@@ -43,6 +44,9 @@
                         <td>
                             {{ schedule.shift.start_time.strftime('%H:%M') }} - 
                             {{ schedule.shift.end_time.strftime('%H:%M') }}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ schedule.schedule_type|title }}</span>
                         </td>
                         <td>{{ schedule.user.fullname }}</td>
                         <td>

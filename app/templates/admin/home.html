@@ -20,7 +20,12 @@
         {% if current_shifts %}
             <div class="card border-success">
                 <div class="card-header bg-success text-white">
-                    <h5 class="mb-0">Sedang Berjalan Sekarang</h5>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Sedang Berjalan Sekarang</h5>
+                        {% if current_shifts[0].schedule_type %}
+                        <span class="badge bg-warning text-dark">{{ current_shifts[0].schedule_type|title }}</span>
+                        {% endif %}
+                    </div>
                 </div>
                 <div class="card-body">
                     <!-- Shift Info -->
@@ -96,9 +101,12 @@
                     <div class="col-lg-3 col-md-6 mb-3">
                         <div class="card border border-secondary">
                             <div class="card-header bg-secondary text-white">
-                                <h6 class="mb-0">
-                                    {{ shift_group.shift.shift_name }}
-                                </h6>
+                                <div class=\"d-flex justify-content-between align-items-center\">
+                                    <h6 class=\"mb-0\">{{ shift_group.shift.shift_name }}</h6>
+                                    {% if shift_group.schedule_type %}
+                                    <span class=\"badge bg-warning text-dark\">{{ shift_group.schedule_type|title }}</span>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="card-body">
                                 <p class="mb-2">
@@ -140,9 +148,12 @@
                     <div class="col-lg-3 col-md-6 mb-3">
                         <div class="card border border-info">
                             <div class="card-header bg-info text-white">
-                                <h6 class="mb-0">
-                                    {{ shift_group.shift.shift_name }}
-                                </h6>
+                                <div class=\"d-flex justify-content-between align-items-center\">
+                                    <h6 class=\"mb-0\">{{ shift_group.shift.shift_name }}</h6>
+                                    {% if shift_group.schedule_type %}
+                                    <span class=\"badge bg-warning text-dark\">{{ shift_group.schedule_type|title }}</span>
+                                    {% endif %}
+                                </div>
                             </div>
                             <div class="card-body">
                                 <p class="mb-2">

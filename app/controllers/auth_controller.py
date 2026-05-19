@@ -23,7 +23,7 @@ def check_admin_session_timeout(f):
                     # If more than 5 minutes have passed, logout admin
                     if elapsed > timedelta(seconds=ADMIN_SESSION_TIMEOUT):
                         session.clear()
-                        flash('⏰ Sesi telah berakhir. Silakan login kembali.', 'warning')
+                        flash('Sesi telah berakhir. Silakan login kembali.', 'warning')
                         return redirect(url_for('auth.login_form'))
                     
                     # Update session start time to extend timeout on each activity

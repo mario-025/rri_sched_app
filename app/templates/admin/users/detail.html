@@ -178,8 +178,9 @@
                                     {% set work_date = schedule_map[day] %}
                                     <div class="badge bg-success mb-1" style="font-size: 0.75rem; display: inline-block;">
                                         {{ work_date.shift.shift_name }}
-                                    </div>
-                                    <small class="d-block text-muted" style="font-size: 0.7rem;">
+                                    </div>                                    <div class=\"badge bg-secondary mb-1\" style=\"font-size: 0.7rem; display: inline-block; margin-left: 2px;\">
+                                        {{ work_date.schedule_type|title }}
+                                    </div>                                    <small class="d-block text-muted" style="font-size: 0.7rem;">
                                         {{ work_date.shift.start_time.strftime('%H:%M') }}-{{ work_date.shift.end_time.strftime('%H:%M') }}
                                     </small>
                                 {% else %}
@@ -212,6 +213,7 @@
                         <th>Tanggal</th>
                         <th>Shift</th>
                         <th>Jam</th>
+                        <th>Jenis Jadwal</th>
                         <th>Poin</th>
                     </tr>
                 </thead>
@@ -224,6 +226,9 @@
                         <td>{{ schedule.shift.shift_name }}</td>
                         <td class="text-muted small">
                             {{ schedule.shift.start_time.strftime('%H:%M') }} - {{ schedule.shift.end_time.strftime('%H:%M') }}
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ schedule.schedule_type|title }}</span>
                         </td>
                         <td>
                             <span class="badge bg-info">{{ schedule.shift.score }}</span>

@@ -1,6 +1,6 @@
 import datetime
 from calendar import monthcalendar, month_name
-from flask import render_template, redirect, url_for, session
+from flask import render_template, redirect, url_for, session, request
 from app.models.schedule import Schedule
 from app.models.shift import Shift
 from app.models.user import User
@@ -87,14 +87,29 @@ def user_home():
         now = datetime.datetime.now()
         cal = monthcalendar(now.year, now.month)
         
+        # Get filter parameter
+        selected_type = request.args.get('schedule_type', None)
+        
         # Get all schedules for current month
-        all_schedules = Schedule.query.options(
+        query = Schedule.query.options(
             db.joinedload(Schedule.shift)
         ).filter(
             Schedule.user_id == user_id,
             db.extract('year', Schedule.work_date) == now.year,
             db.extract('month', Schedule.work_date) == now.month
-        ).all()
+        )
+        
+        # Apply filter if selected
+        if selected_type:
+            query = query.filter(Schedule.schedule_type == selected_type)
+        
+        all_schedules = query.all()
+        
+        # Get available schedule types untuk user ini
+        available_types = db.session.query(Schedule.schedule_type).filter(
+            Schedule.user_id == user_id
+        ).distinct().all()
+        available_types = sorted([t[0] for t in available_types if t[0]])
         
         # Map schedules by date (date as key)
         schedule_map = {}
@@ -113,7 +128,9 @@ def user_home():
             year=now.year,
             month=now.month,
             month_name=month_name[now.month],
-            schedule_map=schedule_map
+            schedule_map=schedule_map,
+            available_types=available_types,
+            selected_type=selected_type
         )
     
     except Exception as e:
@@ -133,6 +150,10 @@ def admin_home():
     ).filter(
         Schedule.work_date == today
     ).all()
+    
+    # Get available schedule types
+    available_types = db.session.query(Schedule.schedule_type).distinct().all()
+    available_types = sorted([t[0] for t in available_types if t[0]])
     
     # Sort by shift_index
     today_schedules = sorted(
@@ -162,6 +183,7 @@ def admin_home():
         if shift_id not in previous_shifts_grouped:
             previous_shifts_grouped[shift_id] = {
                 'shift': schedule.shift,
+                'schedule_type': schedule.schedule_type,
                 'workers': []
             }
         previous_shifts_grouped[shift_id]['workers'].append(schedule.user)
@@ -174,6 +196,7 @@ def admin_home():
             if shift_id not in upcoming_shifts_grouped:
                 upcoming_shifts_grouped[shift_id] = {
                     'shift': schedule.shift,
+                    'schedule_type': schedule.schedule_type,
                     'workers': []
                 }
             upcoming_shifts_grouped[shift_id]['workers'].append(schedule.user)
@@ -196,5 +219,6 @@ def admin_home():
         current_shifts=current_shifts,
         current_shift=current_shift_obj,  # Keep for progress bar
         previous_shifts=previous_shifts,
-        upcoming_shifts=upcoming_shifts
+        upcoming_shifts=upcoming_shifts,
+        available_types=available_types
     )

@@ -49,6 +49,7 @@ def user_my_schedules():
         now = datetime.datetime.now()
         year = request.args.get('year', default=now.year, type=int)
         month = request.args.get('month', default=now.month, type=int)
+        schedule_type = request.args.get('schedule_type', None)
         
         # Validate month and year
         if month < 1:
@@ -59,25 +60,42 @@ def user_my_schedules():
             year += 1
         
         # Get all schedules untuk user ini
-        all_schedules = Schedule.query.options(
+        query = Schedule.query.options(
             db.joinedload(Schedule.shift)
         ).filter(
             Schedule.user_id == user_id
         ).order_by(
             Schedule.work_date.desc()
-        ).all()
+        )
+        
+        # Filter by schedule_type jika diberikan
+        if schedule_type:
+            query = query.filter(Schedule.schedule_type == schedule_type)
+        
+        all_schedules = query.all()
+        
+        # Get available schedule types untuk user ini
+        available_types = db.session.query(Schedule.schedule_type).filter(
+            Schedule.user_id == user_id
+        ).distinct().all()
+        available_types = sorted([t[0] for t in available_types if t[0]])
         
         # Get calendar data for selected month
         cal = monthcalendar(year, month)
         
-        # Get schedules for selected month
-        month_schedules = Schedule.query.options(
+        # Get schedules for selected month with type filter
+        month_query = Schedule.query.options(
             db.joinedload(Schedule.shift)
         ).filter(
             Schedule.user_id == user_id,
             db.extract('year', Schedule.work_date) == year,
             db.extract('month', Schedule.work_date) == month
-        ).all()
+        )
+        
+        if schedule_type:
+            month_query = month_query.filter(Schedule.schedule_type == schedule_type)
+        
+        month_schedules = month_query.all()
         
         # Map schedules by date
         schedule_map = {}
@@ -111,7 +129,9 @@ def user_my_schedules():
             next_month=next_month,
             next_year=next_year,
             current_year=now.year,
-            current_month=now.month
+            current_month=now.month,
+            available_types=available_types,
+            selected_type=schedule_type
         )
     
     except Exception as e:

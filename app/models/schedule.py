@@ -26,6 +26,13 @@ class Schedule(db.Model):
         nullable=False
     )
 
+    schedule_type = db.Column(
+        db.String(100),
+        nullable=False,
+        default='broadcast',
+        index=True
+    )
+
     user = db.relationship(
         "User", 
         back_populates="schedules"

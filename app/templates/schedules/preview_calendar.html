@@ -17,9 +17,18 @@
         <h4 class="mb-0">Preview Jadwal - {{ month_name }} {{ year }}</h4>
     </div>
     <div class="card-body">
-        <p class="mb-0">
-            <strong>Total Jadwal yang akan dibuat:</strong> <span class="badge bg-success fs-6">{{ total_schedules }}</span>
-        </p>
+        <div class="row">
+            <div class="col-md-6">
+                <p class="mb-0">
+                    <strong>Total Jadwal yang akan dibuat:</strong> <span class="badge bg-success fs-6">{{ total_schedules }}</span>
+                </p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-0">
+                    <strong>Jenis Jadwal:</strong> <span class="badge bg-primary fs-6">{{ schedule_type|title }}</span>
+                </p>
+            </div>
+        </div>
     </div>
 </div>
 

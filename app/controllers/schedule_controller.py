@@ -16,7 +16,7 @@ from app.services.scheduler import (
 
 
 # Helper function untuk generate calendar data
-def get_calendar_data(year, month):
+def get_calendar_data(year, month, schedule_type=None):
     """
     Generate calendar data dengan schedule count per tanggal
     """
@@ -31,10 +31,16 @@ def get_calendar_data(year, month):
     )
     
     schedules_by_date = {}
-    schedules = Schedule.query.filter(
+    query = Schedule.query.filter(
         Schedule.work_date >= first_day,
         Schedule.work_date <= last_day
-    ).options(
+    )
+    
+    # Filter by schedule_type jika diberikan
+    if schedule_type:
+        query = query.filter(Schedule.schedule_type == schedule_type)
+    
+    schedules = query.options(
         db.joinedload(Schedule.user),
         db.joinedload(Schedule.shift)
     ).all()
@@ -53,6 +59,7 @@ def get_calendar_data(year, month):
 @login_required
 def schedule_form():
     patterns = ShiftPattern.query.all()
+    
     return render_template(
         "schedules/form.html",
         now=datetime.datetime.now(),
@@ -63,6 +70,7 @@ def schedule_form():
 def generate_schedule_preview():
     year = int(request.form["year"])
     month = int(request.form["month"])
+    schedule_type = request.form.get("schedule_type", "broadcast").strip()
 
     days_off = request.form.getlist(
         "days_off"
@@ -111,6 +119,7 @@ def generate_schedule_preview():
 
     # simpan ke session
     session["preview_schedule"] = schedules
+    session["preview_schedule_type"] = schedule_type
 
     # Convert schedules to calendar format
     cal = calendar.monthcalendar(year, month)
@@ -131,13 +140,18 @@ def generate_schedule_preview():
         month_name=month_name,
         calendar_data=cal,
         schedules_by_date=schedules_by_date,
-        total_schedules=len(schedules)
+        total_schedules=len(schedules),
+        schedule_type=schedule_type
     )
 
 @login_required
 def save_schedule():
     schedules = session.get(
         "preview_schedule"
+    )
+    schedule_type = session.get(
+        "preview_schedule_type",
+        "broadcast"
     )
 
     if not schedules:
@@ -155,7 +169,8 @@ def save_schedule():
             new_schedule = Schedule(
                 user_id=item["user_id"],
                 shift_id=item["shift_id"],
-                work_date=datetime.date.fromisoformat(item["work_date"])
+                work_date=datetime.date.fromisoformat(item["work_date"]),
+                schedule_type=schedule_type
             )
 
             db.session.add(new_schedule)
@@ -181,9 +196,13 @@ def save_schedule():
             "preview_schedule",
             None
         )
+        session.pop(
+            "preview_schedule_type",
+            None
+        )
 
         flash(
-            "Schedule berhasil disimpan",
+            f"Schedule '{schedule_type}' berhasil disimpan",
             "success"
         )
 
@@ -200,6 +219,7 @@ def save_schedule():
 def list_schedules():
     year = request.args.get('year', datetime.datetime.now().year, type=int)
     month = request.args.get('month', datetime.datetime.now().month, type=int)
+    schedule_type = request.args.get('schedule_type', None)
     
     # Validate year and month
     if month < 1 or month > 12:
@@ -207,7 +227,11 @@ def list_schedules():
     if year < 1900 or year > 2100:
         year = datetime.datetime.now().year
     
-    cal, schedules_by_date = get_calendar_data(year, month)
+    # Get all available schedule types untuk dropdown filter
+    all_schedule_types = db.session.query(Schedule.schedule_type).distinct().all()
+    available_types = sorted([t[0] for t in all_schedule_types if t[0]])
+    
+    cal, schedules_by_date = get_calendar_data(year, month, schedule_type)
     
     # Get month name
     month_name = calendar.month_name[month]
@@ -231,7 +255,9 @@ def list_schedules():
         calendar_data=cal,
         schedules_by_date=schedules_by_date,
         prev_month=prev_month,
-        next_month=next_month
+        next_month=next_month,
+        available_types=available_types,
+        selected_type=schedule_type
     )
 
 

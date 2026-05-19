@@ -65,6 +65,25 @@
                         </div>
                     </div>
 
+                    <!-- Jenis Jadwal / Schedule Type (Custom Input) -->
+                    <div class="mb-4">
+                        <label for="schedule_type" class="form-label">
+                            <strong>Jenis Jadwal</strong>
+                        </label>
+                        <input
+                            type="text"
+                            name="schedule_type"
+                            id="schedule_type"
+                            class="form-control form-control-lg"
+                            placeholder="Contoh: Broadcast, Maintenance, Training, dll"
+                            required
+                            style="font-size: 1.1rem; font-weight: bold;"
+                        >
+                        <small class="text-muted d-block mt-2">
+                            Ketikkan nama jenis jadwal sesuai kebutuhan. Anda dapat membuat jadwal dengan jenis berbeda untuk periode yang sama.
+                        </small>
+                    </div>
+
                     <!-- Jumlah Pola Shift yang Dirotasi -->
                     <div class="mb-4">
                         <div class="mb-3">
@@ -189,6 +208,17 @@
     .card-header {
         border-radius: 12px 12px 0 0 !important;
     }
+    
+    .pattern-card {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .pattern-card .card-body {
+        display: flex;
+        flex-direction: column;
+    }
 </style>
 
 <script>
@@ -227,15 +257,16 @@
         colDiv.id = `pattern-item-${index}`;
         
         const card = document.createElement('div');
-        card.className = 'card border-primary';
+        card.className = 'card border-primary pattern-card';
         card.style.borderWidth = '2px';
+        card.style.minHeight = '100%';
         
         const cardBody = document.createElement('div');
         cardBody.className = 'card-body p-3';
         
         // Header dengan nomor dan tombol delete
         const header = document.createElement('div');
-        header.className = 'd-flex justify-content-between align-items-center mb-2';
+        header.className = 'd-flex justify-content-between align-items-start mb-2';
         
         const title = document.createElement('label');
         title.className = 'form-label mb-0';
@@ -243,7 +274,7 @@
         
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
-        deleteBtn.className = 'btn btn-sm btn-danger';
+        deleteBtn.className = 'btn btn-sm btn-danger ms-auto';
         deleteBtn.innerHTML = '✕';
         deleteBtn.addEventListener('click', function(e) {
             e.preventDefault();
@@ -262,7 +293,7 @@
         const select = document.createElement('select');
         select.name = `pola[]`;
         select.id = `pola_${index}`;
-        select.className = 'form-select';
+        select.className = 'form-select mt-3';
         
         // Set required untuk pola pertama
         if (index === 1) {
