@@ -109,6 +109,41 @@
                 <h2 class="text-warning mb-0">{{ user.score }}</h2>
             </div>
         </div>
+
+        <!-- Telegram Status Card -->
+        <div class="card shadow-sm mt-3">
+            <div class="card-header {% if user.telegram_verified %}bg-success{% else %}bg-warning{% endif %} text-white">
+                <h6 class="mb-0">
+                    <i class="fab fa-telegram me-1"></i>Status Telegram
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if user.telegram_verified %}
+                    <div class="mb-3">
+                        <small class="text-muted d-block">ID Telegram</small>
+                        <strong class="text-success">{{ user.telegram_id }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <small class="text-muted d-block">Username</small>
+                        <strong>@{{ user.telegram_username or '-' }}</strong>
+                    </div>
+                    <div class="mb-3">
+                        <span class="badge bg-success">Terverifikasi</span>
+                        {% if user.telegram_verified_at %}
+                            <small class="text-muted d-block mt-2">{{ user.telegram_verified_at.strftime('%d %b %Y %H:%M') }}</small>
+                        {% endif %}
+                    </div>
+                    <hr class="my-2">
+                    <button type="button" class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#clearTelegramModal">
+                        <i class="fas fa-unlink me-1"></i>Putus Koneksi
+                    </button>
+                {% else %}
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>Belum terhubung
+                    </small>
+                {% endif %}
+            </div>
+        </div>
     </div>
 </div>
 
@@ -178,9 +213,11 @@
                                     {% set work_date = schedule_map[day] %}
                                     <div class="badge bg-success mb-1" style="font-size: 0.75rem; display: inline-block;">
                                         {{ work_date.shift.shift_name }}
-                                    </div>                                    <div class=\"badge bg-secondary mb-1\" style=\"font-size: 0.7rem; display: inline-block; margin-left: 2px;\">
+                                    </div>
+                                    <div class="badge bg-secondary mb-1" style="font-size: 0.7rem; display: inline-block; margin-left: 2px;">
                                         {{ work_date.schedule_type|title }}
-                                    </div>                                    <small class="d-block text-muted" style="font-size: 0.7rem;">
+                                    </div>
+                                    <small class="d-block text-muted" style="font-size: 0.7rem;">
                                         {{ work_date.shift.start_time.strftime('%H:%M') }}-{{ work_date.shift.end_time.strftime('%H:%M') }}
                                     </small>
                                 {% else %}
@@ -269,6 +306,37 @@
                 <a href="{{ url_for('user.delete_user', user_id=user.id) }}" class="btn btn-danger">
                     <i class="fas fa-trash me-2"></i>Ya, Hapus
                 </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clear Telegram Modal -->
+<div class="modal fade" id="clearTelegramModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Putus Koneksi Telegram
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-2">
+                    Anda yakin ingin memutuskan koneksi Telegram untuk pegawai <strong>{{ user.fullname }}</strong>?
+                </p>
+                <div class="alert alert-warning mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    <small>Data Telegram (ID: <code>{{ user.telegram_id }}</code>, Username: <strong>@{{ user.telegram_username }}</strong>) akan dihapus.</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <form method="POST" action="{{ url_for('user.clear_telegram_data', user_id=user.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-unlink me-2"></i>Ya, Putus Koneksi
+                    </button>
+                </form>
             </div>
         </div>
     </div>

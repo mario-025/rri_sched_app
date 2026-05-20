@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block title %}Pengaturan Telegram{% endblock %}
+
+{% block content %}
+<style>
+    #successStep .success-icon + span {
+        display: none;
+    }
+</style>
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <!-- Header -->
+            <div class="mb-4">
+                <h2><i class="fab fa-telegram me-2"></i>Pengaturan Telegram</h2>
+                <p class="text-muted">Hubungkan akun Telegram Anda untuk menerima notifikasi jadwal</p>
+            </div>
+
+            <!-- Current Status Card -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Status Koneksi Telegram</h5>
+                </div>
+                <div class="card-body">
+                    <div id="statusContainer">
+                        <p class="text-muted">Loading status...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Link/Unlink Section -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Kelola Koneksi</h5>
+                </div>
+                <div class="card-body">
+                    <div id="linkSection" style="display:block;">
+                        <button id="linkBtn" class="btn btn-primary">
+                            <i class="fab fa-telegram me-2"></i>Hubungkan Telegram
+                        </button>
+                    </div>
+                    <div id="unlinkSection" style="display:none;">
+                        <p class="text-success mb-3">
+                            <i class="fas fa-check-circle me-2"></i>Telegram berhasil terhubung
+                        </p>
+                        <button id="unlinkBtn" class="btn btn-danger">
+                            <i class="fas fa-unlink me-2"></i>Putus Koneksi Telegram
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Telegram Link Modal -->
+<div class="modal fade" id="telegramModal" tabindex="-1" aria-labelledby="telegramModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="telegramModalLabel">
+                    <i class="fab fa-telegram me-2"></i>Hubungkan Telegram
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Code Step -->
+                <div id="codeStep">
+                    <div class="text-center mb-4">
+                        <h6 class="text-muted">Langkah 1: Dapatkan Kode Verifikasi</h6>
+                    </div>
+                    
+                    <!-- Get Code Button -->
+                    <div class="d-grid mb-3">
+                        <button type="button" id="getCodeBtn" class="btn btn-primary btn-lg">
+                            <i class="fas fa-key me-2"></i>Dapatkan Kode Verifikasi
+                        </button>
+                    </div>
+                    
+                    <!-- Code Display Area -->
+                    <div id="codeDisplayArea" style="display:none;">
+                        <div class="alert alert-info" role="alert">
+                            <strong>Kode Verifikasi Anda:</strong>
+                        </div>
+                        
+                        <div class="text-center mb-3">
+                            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border: 2px solid #dee2e6;">
+                                <input type="text" id="verificationCode" class="form-control text-center" 
+                                    style="font-size: 2rem; letter-spacing: 0.3em; border: none; background: transparent; font-weight: bold;" 
+                                    readonly />
+                            </div>
+                        </div>
+                        
+                        <!-- Copy Button -->
+                        <div class="d-grid mb-3">
+                            <button type="button" id="copyCodeBtn" class="btn btn-outline-secondary">
+                                <i class="fas fa-copy me-2"></i>Copy Kode
+                            </button>
+                        </div>
+                        
+                        <!-- Open Bot Link -->
+                        <div class="text-center mb-3">
+                            <a href="https://t.me/TONotifyYou_bot" target="_blank" class="btn btn-primary">
+                                <i class="fab fa-telegram me-2"></i>Buka Bot di Telegram
+                            </a>
+                        </div>
+                        
+                        <!-- Instructions -->
+                        <div class="alert alert-warning" role="alert">
+                            <strong><i class="fas fa-exclamation-triangle me-2"></i>Instruksi:</strong>
+                            <ol class="mb-0 mt-2">
+                                <li>Copy kode di atas</li>
+                                <li>Buka Telegram bot</li>
+                                <li>Kirim kode ke bot</li>
+                                <li>Tunggu verifikasi berhasil</li>
+                            </ol>
+                        </div>
+                        
+                        <!-- Waiting Status -->
+                        <div id="waitingStatus" style="display:none;" class="text-center">
+                            <div class="spinner-border text-primary mb-2" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-muted">Menunggu verifikasi dari bot...</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Success Step -->
+                <div id="successStep" style="display:none;" class="text-center">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle text-success success-icon" style="font-size: 3rem;"></i>
+                        <span style="font-size: 3rem;">✅</span>
+                    </div>
+                    <h5 class="mb-3">Telegram Berhasil Terhubung!</h5>
+                    <p class="text-muted">Kembali ke profile dalam <span id="countdownTimer">5</span> detik...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Unlink Confirmation Modal -->
+<div class="modal fade" id="unlinkModal" tabindex="-1" aria-labelledby="unlinkModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="unlinkModalLabel">
+                    <i class="fas fa-unlink me-2"></i>Putus Koneksi Telegram
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Anda yakin ingin memutuskan koneksi Telegram?</p>
+                <p class="text-muted">Anda tidak akan menerima notifikasi jadwal di Telegram lagi.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" id="confirmUnlink" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Putus Koneksi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Wait for DOM to be loaded
+    function initTelegramSettings() {
+        // DOM Elements
+        const linkBtn = document.getElementById('linkBtn');
+        const unlinkBtn = document.getElementById('unlinkBtn');
+        const getCodeBtn = document.getElementById('getCodeBtn');
+        const copyCodeBtn = document.getElementById('copyCodeBtn');
+        const confirmUnlink = document.getElementById('confirmUnlink');
+        const verificationCode = document.getElementById('verificationCode');
+        const codeDisplayArea = document.getElementById('codeDisplayArea');
+        const codeStep = document.getElementById('codeStep');
+        const successStep = document.getElementById('successStep');
+        const waitingStatus = document.getElementById('waitingStatus');
+        
+        let verificationPollingInterval = null;
+        let countdownInterval = null;
+        let telegramModal, unlinkModal;
+        
+        // Modal initialization
+        function initializeModals() {
+            if (typeof bootstrap !== 'undefined') {
+                telegramModal = new bootstrap.Modal(document.getElementById('telegramModal'), { keyboard: false });
+                unlinkModal = new bootstrap.Modal(document.getElementById('unlinkModal'));
+                registerEventListeners();
+            } else {
+                setTimeout(initializeModals, 100);
+            }
+        }
+        
+        // Register all event listeners
+        function registerEventListeners() {
+            // Link button
+            if (linkBtn) {
+                linkBtn.addEventListener('click', function() {
+                    resetModalState();
+                    if (telegramModal) telegramModal.show();
+                });
+            }
+
+            // Get code button
+            if (getCodeBtn) {
+                getCodeBtn.addEventListener('click', function() {
+                    fetch('/user/telegram-link', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            verificationCode.value = data.code;
+                            codeDisplayArea.style.display = 'block';
+                            getCodeBtn.style.display = 'none';
+                            startVerificationPolling();
+                        } else {
+                            alert('Gagal mendapatkan kode: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan');
+                    });
+                });
+            }
+
+            // Copy code button
+            if (copyCodeBtn) {
+                copyCodeBtn.addEventListener('click', function() {
+                    copyVerificationCode();
+                });
+            }
+
+            // Unlink button
+            if (unlinkBtn) {
+                unlinkBtn.addEventListener('click', function() {
+                    if (unlinkModal) unlinkModal.show();
+                });
+            }
+
+            // Confirm unlink
+            if (confirmUnlink) {
+                confirmUnlink.addEventListener('click', function() {
+                    fetch('/user/telegram-unlink', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (unlinkModal) unlinkModal.hide();
+                            checkTelegramStatus();
+                            alert('Telegram berhasil diputuskan');
+                        } else {
+                            alert('Gagal memutuskan: ' + data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Terjadi kesalahan');
+                    });
+                });
+            }
+        }
+        
+        // Initialize modals
+        initializeModals();
+        
+        // Load initial status
+        checkTelegramStatus();
+        
+        // Get Telegram status
+        function checkTelegramStatus() {
+            fetch('/user/telegram-status', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const statusContainer = document.getElementById('statusContainer');
+                const linkSection = document.getElementById('linkSection');
+                const unlinkSection = document.getElementById('unlinkSection');
+                const telegramId = escapeHtml(data.telegram_id || '-');
+                const telegramUsername = data.telegram_username ? `@${escapeHtml(data.telegram_username)}` : '-';
+                const verifiedAt = escapeHtml(data.verified_at || '-');
+                
+                if (data.is_complete) {
+                    // Connected
+                    statusContainer.innerHTML = `
+                        <div class="alert alert-success mb-0">
+                            <i class="fas fa-check-circle me-2"></i>
+                            <strong>Terhubung</strong><br>
+                            ID Telegram: <code>${telegramId}</code><br>
+                            Username: <code>${telegramUsername}</code><br>
+                            Terhubung sejak: ${verifiedAt}
+                        </div>
+                    `;
+                    linkSection.style.display = 'none';
+                    unlinkSection.style.display = 'block';
+                } else {
+                    // Not connected
+                    statusContainer.innerHTML = `
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            <strong>Belum Terhubung</strong><br>
+                            Hubungkan akun Telegram Anda untuk menerima notifikasi
+                        </div>
+                    `;
+                    linkSection.style.display = 'block';
+                    unlinkSection.style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking status:', error);
+                const linkSection = document.getElementById('linkSection');
+                const unlinkSection = document.getElementById('unlinkSection');
+                const statusContainer = document.getElementById('statusContainer');
+                
+                statusContainer.innerHTML = `
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Status tidak dapat dimuat</strong><br>
+                        Silakan hubungkan akun Telegram Anda
+                    </div>
+                `;
+                linkSection.style.display = 'block';
+                unlinkSection.style.display = 'none';
+            });
+        }
+
+        // Escape API values before injecting into HTML
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Copy verification code with modern Clipboard API and legacy fallback
+        function copyVerificationCode() {
+            const code = verificationCode.value;
+            const copyPromise = navigator.clipboard
+                ? navigator.clipboard.writeText(code)
+                : new Promise((resolve, reject) => {
+                    verificationCode.select();
+                    document.execCommand('copy') ? resolve() : reject();
+                });
+
+            copyPromise
+                .then(() => {
+                    const originalHtml = copyCodeBtn.innerHTML;
+                    copyCodeBtn.innerHTML = '<i class="fas fa-check me-2"></i>Copied!';
+                    copyCodeBtn.classList.remove('btn-outline-secondary');
+                    copyCodeBtn.classList.add('btn-success');
+
+                    setTimeout(() => {
+                        copyCodeBtn.innerHTML = originalHtml;
+                        copyCodeBtn.classList.remove('btn-success');
+                        copyCodeBtn.classList.add('btn-outline-secondary');
+                    }, 2000);
+                })
+                .catch(error => {
+                    console.error('Copy error:', error);
+                    alert('Gagal menyalin kode');
+                });
+        }
+
+        // Polling for verification
+        function startVerificationPolling() {
+            waitingStatus.style.display = 'block';
+            
+            let pollCount = 0;
+            const maxPolls = 300;
+            
+            verificationPollingInterval = setInterval(() => {
+                pollCount++;
+                
+                if (pollCount > maxPolls) {
+                    clearInterval(verificationPollingInterval);
+                    waitingStatus.style.display = 'none';
+                    alert('Verifikasi timeout. Silakan coba lagi.');
+                    resetModalState();
+                    return;
+                }
+                
+                fetch('/user/telegram-status', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.is_complete) {
+                        clearInterval(verificationPollingInterval);
+                        showSuccessMessage();
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }, 2000);
+        }
+
+        // Show success message
+        function showSuccessMessage() {
+            codeStep.style.display = 'none';
+            successStep.style.display = 'block';
+            
+            let countdown = 5;
+            const countdownTimer = document.getElementById('countdownTimer');
+            
+            countdownInterval = setInterval(() => {
+                countdown--;
+                countdownTimer.textContent = countdown;
+                
+                if (countdown <= 0) {
+                    clearInterval(countdownInterval);
+                    if (telegramModal) telegramModal.hide();
+                    checkTelegramStatus();
+                    window.location.href = '/user/profile';
+                }
+            }, 1000);
+        }
+
+        // Reset modal state
+        function resetModalState() {
+            codeStep.style.display = 'block';
+            successStep.style.display = 'none';
+            codeDisplayArea.style.display = 'none';
+            waitingStatus.style.display = 'none';
+            getCodeBtn.style.display = 'block';
+            verificationCode.value = '';
+            
+            if (verificationPollingInterval) clearInterval(verificationPollingInterval);
+            if (countdownInterval) clearInterval(countdownInterval);
+        }
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTelegramSettings);
+    } else {
+        initTelegramSettings();
+    }
+</script>
+{% endblock %}

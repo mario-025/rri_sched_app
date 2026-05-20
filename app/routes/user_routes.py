@@ -9,7 +9,8 @@ from app.controllers.user_controller import (
     delete_user,
     user_detail,
     api_generate_password,
-    api_search_users
+    api_search_users,
+    clear_telegram_data
 )
 
 user_bp = Blueprint(
@@ -74,3 +75,9 @@ user_bp.route(
     "/<int:user_id>/delete",
     methods=["POST"]
 )(delete_user)
+
+# Clear telegram data for user
+user_bp.route(
+    "/<int:user_id>/clear-telegram",
+    methods=["POST"]
+)(clear_telegram_data)

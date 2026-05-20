@@ -334,3 +334,28 @@ def api_search_users():
         })
     
     return jsonify(result)
+
+
+@login_required
+@admin_only
+def clear_telegram_data(user_id):
+    """Clear telegram connection data for a user"""
+    try:
+        user = User.query.get_or_404(user_id)
+        
+        # Clear all telegram fields
+        user.telegram_id = None
+        user.telegram_username = None
+        user.telegram_verified = False
+        user.telegram_enabled = False
+        user.telegram_verified_at = None
+        
+        db.session.commit()
+        
+        flash(f'Data Telegram untuk "{user.fullname}" berhasil dihapus', 'success')
+        return redirect(url_for('user.user_detail', user_id=user_id))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+        return redirect(url_for('user.user_detail', user_id=user_id))
