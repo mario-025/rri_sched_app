@@ -9,27 +9,47 @@ from app.config.database import db
 # Session timeout for admin (in seconds)
 ADMIN_SESSION_TIMEOUT = 5 * 60  # 5 minutes
 
+def expire_admin_session_if_needed():
+    """Return True jika session admin sudah expired dan sudah di-clear."""
+    if 'admin_id' not in session:
+        return False
+
+    session_start = session.get('session_start_time')
+    if not session_start:
+        session.clear()
+        return True
+
+    try:
+        start_time = datetime.fromisoformat(session_start)
+    except (TypeError, ValueError):
+        session.clear()
+        return True
+
+    elapsed = datetime.now() - start_time
+    if elapsed > timedelta(seconds=ADMIN_SESSION_TIMEOUT):
+        session.clear()
+        return True
+
+    session['session_start_time'] = datetime.now().isoformat()
+    return False
+
+
+def enforce_admin_session_timeout():
+    """Global guard untuk memaksa logout admin setelah idle 5 menit."""
+    if expire_admin_session_if_needed():
+        flash('Sesi telah berakhir. Silakan login kembali.', 'warning')
+        return redirect(url_for('auth.login_form'))
+
+    return None
+
+
 def check_admin_session_timeout(f):
     """Decorator untuk check admin session timeout (5 menit)"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'admin_id' in session:
-            session_start = session.get('session_start_time')
-            if session_start:
-                try:
-                    start_time = datetime.fromisoformat(session_start)
-                    elapsed = datetime.now() - start_time
-                    
-                    # If more than 5 minutes have passed, logout admin
-                    if elapsed > timedelta(seconds=ADMIN_SESSION_TIMEOUT):
-                        session.clear()
-                        flash('Sesi telah berakhir. Silakan login kembali.', 'warning')
-                        return redirect(url_for('auth.login_form'))
-                    
-                    # Update session start time to extend timeout on each activity
-                    session['session_start_time'] = datetime.now().isoformat()
-                except:
-                    pass
+        timeout_response = enforce_admin_session_timeout()
+        if timeout_response:
+            return timeout_response
         
         return f(*args, **kwargs)
     return decorated_function
@@ -66,6 +86,10 @@ def user_login_required(f):
 
 def login_form():
     """Show login form"""
+    timeout_response = enforce_admin_session_timeout()
+    if timeout_response:
+        return timeout_response
+
     # Jika sudah login, redirect ke dashboard
     if 'admin_id' in session or 'user_id' in session:
         return redirect(url_for('home.home'))

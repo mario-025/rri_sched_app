@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, flash, redirect, render_template, request, url_for
 from werkzeug.serving import is_running_from_reloader
 from app.config.database import db
 from app.config.settings import Config
@@ -17,6 +17,7 @@ from app.routes.shift_routes import shift_bp
 from app.routes.shift_pattern_routes import shift_pattern_bp
 from app.routes.auth_routes import auth
 from app.bot_manager import start_bot_thread
+from app.services.telegram_notifier import start_notifier_thread
 
 # Load environment variables
 load_dotenv()
@@ -47,6 +48,12 @@ def create_app():
     
     db.init_app(app)
     limiter.init_app(app)
+
+    @app.before_request
+    def enforce_admin_timeout_before_request():
+        from app.controllers.auth_controller import enforce_admin_session_timeout
+
+        return enforce_admin_session_timeout()
     
     # ====== ERROR HANDLERS (Register FIRST before blueprints) ======
     
@@ -55,6 +62,13 @@ def create_app():
         """Handle 404 Not Found"""
         app.logger.warning(f'404 Error: {error}')
         return render_template('errors/404.html'), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed_error(error):
+        """Handle 405 Method Not Allowed without showing generic 500."""
+        app.logger.warning(f'405 Error: {error}')
+        flash('Aksi tidak valid. Silakan gunakan tombol/form yang tersedia.', 'warning')
+        return redirect(request.referrer or url_for('home.home'))
     
     @app.errorhandler(500)
     def internal_error(error):
@@ -101,19 +115,30 @@ def create_app():
     
     # ====== START TELEGRAM BOT (if token available) ======
     telegram_token = os.getenv('TELEGRAM_BOT_TOKEN')
+    telegram_enabled = os.getenv('TELEGRAM_BOT_ENABLED', 'true').lower() == 'true'
+    use_reloader = os.getenv('FLASK_USE_RELOADER', 'false').lower() == 'true'
     should_start_bot = (
-        os.getenv('FLASK_ENV', 'production') != 'development'
-        or is_running_from_reloader()
+        telegram_enabled
+        and telegram_token
+        and (
+            os.getenv('FLASK_ENV', 'production') != 'development'
+            or not use_reloader
+            or is_running_from_reloader()
+        )
     )
 
-    if telegram_token and should_start_bot:
+    if should_start_bot:
         try:
             start_bot_thread(telegram_token)
             app.logger.info("Telegram bot thread started")
+            start_notifier_thread(app, telegram_token)
+            app.logger.info("Telegram schedule notifier thread started")
         except Exception as e:
             app.logger.error(f"Failed to start telegram bot: {e}")
-    elif telegram_token:
+    elif telegram_token and telegram_enabled:
         app.logger.info("Telegram bot skipped in Flask reloader parent process")
+    elif telegram_token:
+        app.logger.info("Telegram bot disabled by TELEGRAM_BOT_ENABLED")
     else:
         app.logger.warning("TELEGRAM_BOT_TOKEN not found in .env - Bot disabled")
 

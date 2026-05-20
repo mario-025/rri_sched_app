@@ -303,9 +303,11 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <a href="{{ url_for('user.delete_user', user_id=user.id) }}" class="btn btn-danger">
-                    <i class="fas fa-trash me-2"></i>Ya, Hapus
-                </a>
+                <form method="POST" action="{{ url_for('user.delete_user', user_id=user.id) }}" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-2"></i>Ya, Hapus
+                    </button>
+                </form>
             </div>
         </div>
     </div>
