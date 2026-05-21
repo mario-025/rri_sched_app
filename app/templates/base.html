@@ -316,7 +316,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ url_for('home.home') }}">
-                <i class="fas fa-calendar-check me-2"></i>Jadwal Kerja
+            <img src="{{ url_for('static', filename='images/rri_tmb.png') }}" width="auto" height="30" class="d-inline-block align-text-top" alt="RRI">
             </a>
 
             <!-- Navigation Menu - Admin -->
@@ -397,7 +397,7 @@
                 {% if session.get('admin_id') %}
                 <div class="d-flex align-items-center gap-2">
                     <small class="text-white-50">
-                        <i class="fas fa-shield-alt me-1"></i>Admin: <strong>{{ session.get('admin_fullname', 'Admin') }}</strong>
+                        <i class="fas fa-shield-alt me-1"></i><strong>Admin</strong>
                     </small>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">
                         <i class="fas fa-sign-out-alt me-1"></i>Logout
@@ -409,7 +409,7 @@
                 {% if session.get('user_id') %}
                 <div class="d-flex align-items-center gap-2">
                     <small class="text-white-50">
-                        <i class="fas fa-user-tie me-1"></i>Pegawai: <strong>{{ session.get('user_fullname', 'User') }}</strong>
+                        <i class="fas fa-user-tie me-1"></i><strong>{{ session.get('user_fullname', 'User') }}</strong>
                     </small>
                     <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-light btn-sm">
                         <i class="fas fa-sign-out-alt me-1"></i>Logout
@@ -537,11 +537,11 @@
                             </ol>
 
                             <div class="tutorial-highlight">
-                                <strong>⚠️ Penting:</strong> Tentukan shift apa saja yang akan digunakan dalam organisasi Anda. Pastikan semua shift sudah dibuat sebelum membuat jadwal.
+                                <strong>Penting:</strong> Tentukan shift apa saja yang akan digunakan dalam organisasi Anda. Pastikan semua shift sudah dibuat sebelum membuat jadwal.
                             </div>
 
                             <div class="tutorial-tip mt-2">
-                                <strong>💡 Tips:</strong> Untuk distribusi beban kerja yang merata, gunakan shift yang seimbang. Misalnya, jika ada 30 pegawai dan 3 shift, masing-masing shift akan mendapat sekitar 10 pegawai.
+                                <strong>Tips:</strong> Untuk distribusi beban kerja yang merata, gunakan shift yang seimbang. Misalnya, jika ada 30 pegawai dan 3 shift, masing-masing shift akan mendapat sekitar 10 pegawai.
                             </div>
                         </div>
                     </div>
@@ -589,11 +589,11 @@
                             </ol>
 
                             <div class="tutorial-highlight">
-                                <strong>⚠️ Penting:</strong> Pola shift harus sesuai dengan shift yang sudah Anda buat di Manajemen Shift. Pastikan tidak ada shift dalam pola yang tidak ada di sistem.
+                                <strong>Penting:</strong> Pola shift harus sesuai dengan shift yang sudah Anda buat di Manajemen Shift. Pastikan tidak ada shift dalam pola yang tidak ada di sistem.
                             </div>
 
                             <div class="tutorial-tip mt-2">
-                                <strong>💡 Tips:</strong> Untuk memulai, buat pola rotating 3 shift (Pagi → Siang → Malam → Pagi). Ini adalah pola paling umum untuk shift kerja yang merata dan adil.
+                                <strong>Tips:</strong> Untuk memulai, buat pola rotating 3 shift (Pagi → Siang → Malam → Pagi). Ini adalah pola paling umum untuk shift kerja yang merata dan adil.
                             </div>
                         </div>
                     </div>
@@ -640,7 +640,7 @@
                             </ol>
 
                             <div class="tutorial-tip">
-                                <strong>💡 Tips:</strong> Jangan langsung simpan tanpa preview. Luangkan waktu untuk memastikan distribusi pegawai sudah merata dan sesuai harapan.
+                                <strong>Tips:</strong> Jangan langsung simpan tanpa preview. Luangkan waktu untuk memastikan distribusi pegawai sudah merata dan sesuai harapan.
                             </div>
                         </div>
                     </div>
@@ -668,7 +668,7 @@
                             </ul>
 
                             <div class="tutorial-highlight">
-                                <strong>⚠️ Jangan Lewatkan:</strong> Jika ada yang terlihat salah di preview, jangan langsung simpan! Kembali dan ubah konfigurasi sebelum menciptakan jadwal yang bermasalah.
+                                <strong>Jangan Lewatkan:</strong> Jika ada yang terlihat salah di preview, jangan langsung simpan! Kembali dan ubah konfigurasi sebelum menciptakan jadwal yang bermasalah.
                             </div>
                         </div>
                     </div>
@@ -697,7 +697,7 @@
                             </ul>
 
                             <div class="tutorial-tip">
-                                <strong>💡 Tips:</strong> Informasikan jadwal kepada pegawai sebelum jadwal berlaku. Berikan waktu yang cukup untuk penyesuaian, minimal 1 minggu sebelumnya.
+                                <strong>Tips:</strong> Informasikan jadwal kepada pegawai sebelum jadwal berlaku. Berikan waktu yang cukup untuk penyesuaian, minimal 1 minggu sebelumnya.
                             </div>
                         </div>
                     </div>
@@ -709,19 +709,19 @@
                     <div class="tutorial-step" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
                         <div class="tutorial-step-content" style="margin-left: 0;">
                             <div class="tutorial-tip mb-2">
-                                <strong>📋 Kelengkapan Data:</strong> Investasi waktu untuk mempersiapkan data dengan baik. Jadwal yang baik dimulai dari data yang lengkap dan akurat.
+                                <strong>Kelengkapan Data:</strong> Investasi waktu untuk mempersiapkan data dengan baik. Jadwal yang baik dimulai dari data yang lengkap dan akurat.
                             </div>
                             <div class="tutorial-tip mb-2">
-                                <strong>🔄 Update Berkala:</strong> Lakukan pembaruan jadwal sesuai siklus kerja Anda (mingguan, dua mingguan, atau bulanan) untuk keseimbangan yang berkelanjutan.
+                                <strong>Update Berkala:</strong> Lakukan pembaruan jadwal sesuai siklus kerja Anda (mingguan, dua mingguan, atau bulanan) untuk keseimbangan yang berkelanjutan.
                             </div>
                             <div class="tutorial-tip mb-2">
-                                <strong>⚖️ Keadilan Distribusi:</strong> Sistem menggunakan skor pegawai untuk memastikan distribusi yang adil. Monitor skor untuk memastikan tidak ada pegawai yang selalu mendapat shift yang sama.
+                                <strong>Keadilan Distribusi:</strong> Sistem menggunakan skor pegawai untuk memastikan distribusi yang adil. Monitor skor untuk memastikan tidak ada pegawai yang selalu mendapat shift yang sama.
                             </div>
                             <div class="tutorial-tip mb-2">
-                                <strong>📞 Komunikasi Terbuka:</strong> Biarkan pegawai tahu tentang sistem penjadwalan ini. Transparansi meningkatkan kepercayaan dan penerimaan.
+                                <strong>Komunikasi Terbuka:</strong> Biarkan pegawai tahu tentang sistem penjadwalan ini. Transparansi meningkatkan kepercayaan dan penerimaan.
                             </div>
                             <div class="tutorial-tip">
-                                <strong>🔧 Testing:</strong> Saat pertama kali, coba generate jadwal untuk periode pendek (1 minggu) untuk memastikan pola dan konfigurasi berjalan dengan benar sebelum melanjutkan ke periode yang lebih panjang.
+                                <strong>Testing:</strong> Saat pertama kali, coba generate jadwal untuk periode pendek (1 minggu) untuk memastikan pola dan konfigurasi berjalan dengan benar sebelum melanjutkan ke periode yang lebih panjang.
                             </div>
                         </div>
                     </div>

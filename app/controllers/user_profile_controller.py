@@ -6,7 +6,7 @@ Handle user profile view dan schedule untuk user sendiri
 import datetime
 import random
 import string
-from calendar import monthcalendar, month_name
+from calendar import monthcalendar
 from flask import render_template, session, redirect, url_for, flash, request, jsonify, current_app
 from app.models.user import User
 from app.models.schedule import Schedule
@@ -18,6 +18,29 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+MONTHS_ID = {
+    1: "Januari",
+    2: "Februari",
+    3: "Maret",
+    4: "April",
+    5: "Mei",
+    6: "Juni",
+    7: "Juli",
+    8: "Agustus",
+    9: "September",
+    10: "Oktober",
+    11: "November",
+    12: "Desember"
+}
+DAYS_ID = {
+    0: "Senin",
+    1: "Selasa",
+    2: "Rabu",
+    3: "Kamis",
+    4: "Jumat",
+    5: "Sabtu",
+    6: "Minggu"
+}
 
 @user_login_required
 def user_profile():
@@ -128,7 +151,7 @@ def user_my_schedules():
             calendar=cal,
             year=year,
             month=month,
-            month_name=month_name[month],
+            month_name=MONTHS_ID[month],
             schedule_map=schedule_map,
             prev_month=prev_month,
             prev_year=prev_year,
@@ -229,6 +252,8 @@ def telegram_status():
         user_id = session.get('user_id')
         user = User.query.get(user_id)
         
+        day = DAYS_ID[user.telegram_verified_at.weekday()]
+        month = MONTHS_ID[user.telegram_verified_at.month]
         if not user:
             return jsonify({'is_complete': False})
         
@@ -243,7 +268,7 @@ def telegram_status():
             'is_complete': is_complete,
             'telegram_id': user.telegram_id,
             'telegram_username': user.telegram_username or '',
-            'verified_at': user.telegram_verified_at.strftime('%d %b %Y %H:%M') if user.telegram_verified_at else None
+            'verified_at': f"{day}, {user.telegram_verified_at.day} {month} {user.telegram_verified_at.year} {user.telegram_verified_at.strftime('%H:%M:%S')}" if user.telegram_verified_at else None
         }
         
         return jsonify(response)

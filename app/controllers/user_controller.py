@@ -1,6 +1,6 @@
 from flask import redirect, render_template, request, flash, url_for, jsonify
 from datetime import datetime
-from calendar import monthcalendar, month_name
+from calendar import monthcalendar
 import string
 import random
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -15,6 +15,29 @@ def generate_random_password(length=16):
     characters = string.ascii_letters + string.digits
     return ''.join(random.choice(characters) for _ in range(length))
 
+MONTHS_ID = {
+    1: "Januari",
+    2: "Februari",
+    3: "Maret",
+    4: "April",
+    5: "Mei",
+    6: "Juni",
+    7: "Juli",
+    8: "Agustus",
+    9: "September",
+    10: "Oktober",
+    11: "November",
+    12: "Desember"
+}
+DAYS_ID = {
+    0: "Senin",
+    1: "Selasa",
+    2: "Rabu",
+    3: "Kamis",
+    4: "Jumat",
+    5: "Sabtu",
+    6: "Minggu"
+}
 
 @login_required
 @admin_only
@@ -104,7 +127,7 @@ def user_detail(user_id):
         calendar=cal,
         year=now.year,
         month=now.month,
-        month_name=month_name[now.month],
+        month_name=MONTHS_ID[now.month],
         schedule_map=schedule_map
     )
 

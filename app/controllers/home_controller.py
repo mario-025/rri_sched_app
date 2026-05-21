@@ -1,11 +1,36 @@
 import datetime
-from calendar import monthcalendar, month_name
+from calendar import monthcalendar
 from flask import render_template, redirect, url_for, session, request
 from app.models.schedule import Schedule
 from app.models.shift import Shift
 from app.models.user import User
 from app.config.database import db
 from app.controllers.auth_controller import login_required
+
+
+MONTHS_ID = {
+    1: "Januari",
+    2: "Februari",
+    3: "Maret",
+    4: "April",
+    5: "Mei",
+    6: "Juni",
+    7: "Juli",
+    8: "Agustus",
+    9: "September",
+    10: "Oktober",
+    11: "November",
+    12: "Desember"
+}
+DAYS_ID = {
+    0: "Senin",
+    1: "Selasa",
+    2: "Rabu",
+    3: "Kamis",
+    4: "Jumat",
+    5: "Sabtu",
+    6: "Minggu"
+}
 
 
 @login_required
@@ -127,7 +152,7 @@ def user_home():
             calendar=cal,
             year=now.year,
             month=now.month,
-            month_name=month_name[now.month],
+            month_name=MONTHS_ID[now.month],
             schedule_map=schedule_map,
             available_types=available_types,
             selected_type=selected_type

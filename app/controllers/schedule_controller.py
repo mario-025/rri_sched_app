@@ -14,6 +14,20 @@ from app.services.scheduler import (
     generate_schedule
 )
 
+MONTHS_ID = {
+    1: "Januari",
+    2: "Februari",
+    3: "Maret",
+    4: "April",
+    5: "Mei",
+    6: "Juni",
+    7: "Juli",
+    8: "Agustus",
+    9: "September",
+    10: "Oktober",
+    11: "November",
+    12: "Desember"
+}
 
 # Helper function untuk generate calendar data
 def get_calendar_data(year, month, schedule_type=None):
@@ -131,7 +145,7 @@ def generate_schedule_preview():
             schedules_by_date[date_key] = []
         schedules_by_date[date_key].append(sched)
     
-    month_name = calendar.month_name[month]
+    month_name = MONTHS_ID.get(month, calendar.month_name[month])
 
     return render_template(
         "schedules/preview_calendar.html",
@@ -251,7 +265,7 @@ def list_schedules():
         "schedules/calendar.html",
         year=year,
         month=month,
-        month_name=month_name,
+        month_name=MONTHS_ID.get(month, month_name),
         calendar_data=cal,
         schedules_by_date=schedules_by_date,
         prev_month=prev_month,

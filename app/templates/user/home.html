@@ -32,14 +32,22 @@
                             <div class="progress" style="height: 25px;">
                                 <div class="progress-bar progress-bar-striped progress-bar-animated" 
                                      role="progressbar" 
+                                     id="user-shift-progress"
                                      style="width: {{ progress_percent }}%"
                                      aria-valuenow="{{ progress_percent }}" 
                                      aria-valuemin="0" 
                                      aria-valuemax="100">
-                                    {{ progress_percent }}%
+                                    <span id="user-shift-percent">{{ progress_percent }}%</span>
                                 </div>
                             </div>
-                            <small class="text-muted">Waktu berjalan: {{ current_time.strftime('%H:%M:%S') }}</small>
+                            <small class="text-muted">
+                                Waktu berjalan: <span id="user-live-time">{{ current_time.strftime('%H:%M:%S') }}</span>
+                            </small>
+                            <div class="small text-success mt-1">
+                                Sisa shift: <strong id="user-shift-remaining">Menghitung...</strong>
+                            </div>
+                            <input type="hidden" id="user-shift-start" value="{{ current_shift.shift.start_time.strftime('%H:%M') }}">
+                            <input type="hidden" id="user-shift-end" value="{{ current_shift.shift.end_time.strftime('%H:%M') }}">
                         </div>
                     </div>
                 </div>
@@ -56,7 +64,9 @@
                         {% set start_seconds = (current_shift.shift.start_time.hour * 3600 + current_shift.shift.start_time.minute * 60) - (current_time.hour * 3600 + current_time.minute * 60) %}
                         {% set hours = start_seconds // 3600 %}
                         {% set minutes = (start_seconds % 3600) // 60 %}
-                        {{ hours }} jam {{ minutes }} menit
+                        <span id="user-countdown" data-start="{{ current_shift.shift.start_time.strftime('%H:%M') }}">
+                            {{ hours }} jam {{ minutes }} menit
+                        </span>
                     </p>
                 </div>
             {% else %}
@@ -209,6 +219,70 @@ function filterByType(scheduleType) {
         window.location.href = `{{ url_for('home.home') }}?schedule_type=${scheduleType}`;
     }
 }
+
+function formatDuration(totalSeconds) {
+    const seconds = Math.max(0, Math.floor(totalSeconds));
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+        return `${hours} jam ${minutes} menit ${secs} detik`;
+    }
+
+    return `${minutes} menit ${secs} detik`;
+}
+
+function timeToTodayDate(timeValue) {
+    const [hours, minutes] = timeValue.split(':').map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes, 0, 0);
+    return date;
+}
+
+function updateUserLiveShift() {
+    const now = new Date();
+    const liveTime = document.getElementById('user-live-time');
+    if (liveTime) {
+        liveTime.textContent = now.toLocaleTimeString('id-ID', { hour12: false });
+    }
+
+    const countdown = document.getElementById('user-countdown');
+    if (countdown) {
+        const startAt = timeToTodayDate(countdown.dataset.start);
+        countdown.textContent = formatDuration((startAt - now) / 1000);
+    }
+
+    const startInput = document.getElementById('user-shift-start');
+    const endInput = document.getElementById('user-shift-end');
+    const progressBar = document.getElementById('user-shift-progress');
+    const progressText = document.getElementById('user-shift-percent');
+    const remainingText = document.getElementById('user-shift-remaining');
+
+    if (startInput && endInput && progressBar && progressText) {
+        const startAt = timeToTodayDate(startInput.value);
+        const endAt = timeToTodayDate(endInput.value);
+        const total = endAt - startAt;
+        const elapsed = now - startAt;
+        const progress = total > 0 ? Math.max(0, Math.min(100, (elapsed / total) * 100)) : 0;
+
+        progressBar.style.width = `${progress}%`;
+        progressBar.setAttribute('aria-valuenow', Math.round(progress));
+        progressText.textContent = `${Math.round(progress)}%`;
+
+        if (remainingText) {
+            remainingText.textContent = formatDuration((endAt - now) / 1000);
+        }
+    }
+}
+
+updateUserLiveShift();
+setInterval(updateUserLiveShift, 1000);
+
+// Refresh status tiap menit agar perpindahan "belum dimulai" ke "sedang berlangsung" otomatis terlihat.
+setInterval(() => {
+    window.location.reload();
+}, 60000);
 </script>
 
 {% endblock %}
