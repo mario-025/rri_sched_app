@@ -287,33 +287,59 @@ def telegram_verify_from_bot():
         username = data.get('username', '').strip()
         bot_token = data.get('bot_token', '')
         
+        logger.info(f"[VERIFY] Received verification request: code={code}, telegram_id={telegram_id}, username={username}")
+        
         # Validate bot token
         if bot_token != current_app.config.get('TELEGRAM_BOT_TOKEN'):
-            logger.warning(f"Invalid bot token in verify request")
+            logger.warning(f"[VERIFY] Invalid bot token in verify request")
             return jsonify({'success': False, 'error': 'Invalid bot token'}), 401
         
         if not code or not telegram_id:
+            logger.warning(f"[VERIFY] Missing required fields: code={bool(code)}, telegram_id={bool(telegram_id)}")
             return jsonify({'success': False, 'error': 'Missing required fields'}), 400
         
         # Verify code
         if not hasattr(current_app, 'pending_telegram_verifications'):
-            return jsonify({'success': False, 'error': 'Code not found'}), 400
+            logger.error(f"[VERIFY] pending_telegram_verifications dict not initialized! APP RESTART detected!")
+            return jsonify({
+                'success': False, 
+                'error': 'Kode tidak ditemukan. Aplikasi mungkin baru di-restart. Harap dapatkan kode verifikasi baru.'
+            }), 400
+        
+        logger.info(f"[VERIFY] Pending codes available: {list(current_app.pending_telegram_verifications.keys())}")
         
         if code not in current_app.pending_telegram_verifications:
-            return jsonify({'success': False, 'error': 'Code not valid'}), 400
+            logger.warning(f"[VERIFY] Code not found in storage: {code}")
+            return jsonify({
+                'success': False, 
+                'error': 'Kode tidak valid. Harap dapatkan kode verifikasi baru.'
+            }), 400
         
         stored = current_app.pending_telegram_verifications[code]
         
-        # Check expiry
-        if datetime.datetime.now() > stored['expires_at']:
+        # Check expiry with detailed logging
+        current_time = datetime.datetime.now()
+        expires_at = stored['expires_at']
+        time_remaining = expires_at - current_time
+        
+        logger.info(f"[VERIFY] Code expiry check: current={current_time}, expires_at={expires_at}, remaining={time_remaining}")
+        
+        if current_time > expires_at:
             del current_app.pending_telegram_verifications[code]
-            return jsonify({'success': False, 'error': 'Code expired'}), 400
+            logger.warning(f"[VERIFY] Code expired: {code} (expired {-time_remaining} ago)")
+            return jsonify({
+                'success': False, 
+                'error': 'Kode sudah kadaluarsa (berlaku 10 menit). Harap dapatkan kode verifikasi baru.'
+            }), 400
         
         user_id = stored['user_id']
         user = User.query.get(user_id)
         
         if not user:
+            logger.error(f"[VERIFY] User not found: user_id={user_id}")
             return jsonify({'success': False, 'error': 'User not found'}), 404
+        
+        logger.info(f"[VERIFY] User found: user_id={user_id}, username={user.username}")
         
         # Check telegram_id is not already used by another user
         existing = User.query.filter(
@@ -322,7 +348,8 @@ def telegram_verify_from_bot():
         ).first()
         
         if existing:
-            return jsonify({'success': False, 'error': 'Telegram ID already linked to another user'}), 400
+            logger.warning(f"[VERIFY] Telegram ID already linked: {telegram_id} -> user {existing.id}")
+            return jsonify({'success': False, 'error': 'Telegram ID sudah terhubung ke user lain'}), 400
         
         # Update user
         user.telegram_id = telegram_id
@@ -335,14 +362,16 @@ def telegram_verify_from_bot():
         del current_app.pending_telegram_verifications[code]
         
         db.session.commit()
-        logger.info(f"User {user_id} verified Telegram account: {username}")
-        
+        logger.info(f"[VERIFY] SUCCESS: User {user.username} verified Telegram {telegram_id}")
         return jsonify({'success': True, 'message': 'Verification successful'})
     
     except Exception as e:
-        logger.error(f"Error in telegram_verify_from_bot: {str(e)}")
+        logger.error(f"[VERIFY] ERROR in telegram_verify_from_bot: {str(e)}", exc_info=True)
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({
+            'success': False, 
+            'error': f'Terjadi kesalahan sistem. Silakan hubungi administrator. Error: {str(e)}'
+        }), 500
 
 
 @user_login_required
