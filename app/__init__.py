@@ -1,10 +1,11 @@
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, url_for, jsonify
 from werkzeug.serving import is_running_from_reloader
 from app.config.database import db
 from app.config.settings import Config
 from app.config.limiter import limiter
 import logging
 import os
+import datetime
 from dotenv import load_dotenv
 
 # Import all models to register them with SQLAlchemy
@@ -28,17 +29,29 @@ def create_app():
     app.config.from_object(Config)
     app.config["TELEGRAM_BOT_TOKEN"] = os.getenv("TELEGRAM_BOT_TOKEN")
     
-    # Database configuration
-    app.config["SQLALCHEMY_DATABASE_URI"] = (
-        "mysql+pymysql://root:@localhost/rritmb"
-    )
+    # Database configuration - support both Docker and local
+    # Docker: DB_HOST=mysql (service name)
+    # Local: DB_HOST=localhost
+    db_host = os.getenv('DB_HOST', os.getenv('DATABASE_HOST', 'localhost'))
+    db_port = os.getenv('DB_PORT', '3306')
+    db_user = os.getenv('DB_USER', os.getenv('DATABASE_USER', 'root'))
+    db_password = os.getenv('DB_PASSWORD', os.getenv('DATABASE_PASSWORD', ''))
+    db_name = os.getenv('DB_NAME', os.getenv('DATABASE_NAME', 'rritmb'))
+    
+    # Build database URI
+    if db_password:
+        database_uri = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    else:
+        database_uri = f"mysql+pymysql://{db_user}@{db_host}:{db_port}/{db_name}"
+    
+    app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     
     # Apply engine options (pool configuration, connection timeout, etc)
     app.config["SQLALCHEMY_ENGINE_OPTIONS"] = Config.SQLALCHEMY_ENGINE_OPTIONS
     
     # Session config
-    app.config["SECRET_KEY"] = "your-secret-key-change-this-in-production"
+    app.config["SECRET_KEY"] = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-production')
     app.config["SESSION_COOKIE_SECURE"] = False  # Set True in production with HTTPS
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     
@@ -141,5 +154,25 @@ def create_app():
         app.logger.info("Telegram bot disabled by TELEGRAM_BOT_ENABLED")
     else:
         app.logger.warning("TELEGRAM_BOT_TOKEN not found in .env - Bot disabled")
+
+    # ====== HEALTH CHECK ENDPOINT ======
+    @app.route('/health')
+    def health_check():
+        """Health check endpoint untuk Docker & monitoring systems"""
+        try:
+            # Check database connection
+            db.session.execute(db.text('SELECT 1'))
+            return jsonify({
+                'status': 'healthy',
+                'service': 'sched-app',
+                'database': 'connected',
+                'timestamp': datetime.datetime.utcnow().isoformat()
+            }), 200
+        except Exception as e:
+            app.logger.error(f"Health check failed: {str(e)}")
+            return jsonify({
+                'status': 'unhealthy',
+                'error': str(e)
+            }), 503
 
     return app

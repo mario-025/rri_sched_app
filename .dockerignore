@@ -1,0 +1,85 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+
+# Virtual environments
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node (if any frontend assets)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Misc
+.dockerignore
+Dockerfile
+docker-compose.yml
+*.md
+.editorconfig
+.prettierignore
+
+# Test files
+tests/
+test_*.py
+*_test.py
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Project specific
+check_telegram_state.py
+TELEGRAM_INTEGRATION_TEST_SUMMARY.md
+FIX_TELEGRAM_IMPROVEMENTS.md
+SCHEDULER_DOKUMENTASI.md

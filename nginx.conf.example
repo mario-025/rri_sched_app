@@ -1,0 +1,144 @@
+# Nginx Reverse Proxy Configuration for Sched App
+# Location: /etc/nginx/sites-available/sched-app
+# Enable: sudo ln -s /etc/nginx/sites-available/sched-app /etc/nginx/sites-enabled/
+# Test: sudo nginx -t
+# Reload: sudo systemctl reload nginx
+
+# Redirect HTTP to HTTPS
+server {
+    listen 80;
+    listen [::]:80;
+    server_name sched-app.example.com;
+    
+    # Let's Encrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    
+    # Redirect to HTTPS
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+
+# Main HTTPS server
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name sched-app.example.com;
+    
+    # ========== SSL CONFIGURATION ==========
+    # Generate with: certbot certonly --standalone -d sched-app.example.com
+    ssl_certificate /etc/letsencrypt/live/sched-app.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sched-app.example.com/privkey.pem;
+    
+    # SSL Security
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+    
+    # HSTS (Optional, use with caution)
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    
+    # ========== LOGGING ==========
+    access_log /var/log/nginx/sched-app-access.log combined;
+    error_log /var/log/nginx/sched-app-error.log warn;
+    
+    # ========== CLIENT SIZE LIMITS ==========
+    client_max_body_size 100M;
+    client_body_timeout 30s;
+    client_header_timeout 30s;
+    
+    # ========== GZIP COMPRESSION ==========
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1000;
+    gzip_types text/plain text/css text/xml text/javascript application/x-javascript application/xml+rss;
+    
+    # ========== PROXY SETTINGS ==========
+    # Upstream Flask application
+    upstream flask_app {
+        server 127.0.0.1:5000;
+        keepalive 32;
+    }
+    
+    # Main location
+    location / {
+        proxy_pass http://flask_app;
+        
+        # Preserve host header
+        proxy_set_header Host $host;
+        
+        # Client IP
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        # Protocol
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Connection settings
+        proxy_set_header Connection "";
+        proxy_http_version 1.1;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # Buffering
+        proxy_buffering on;
+        proxy_buffer_size 4k;
+        proxy_buffers 24 4k;
+        proxy_busy_buffers_size 8k;
+    }
+    
+    # ========== STATIC FILES ==========
+    location /static/ {
+        alias /srv/apps/sched_app/app/static/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+    
+    # ========== SECURITY ==========
+    # Deny access to hidden files
+    location ~ /\. {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # Deny access to backup files
+    location ~ ~$ {
+        deny all;
+        access_log off;
+        log_not_found off;
+    }
+    
+    # ========== HEALTH CHECK ==========
+    location /health {
+        proxy_pass http://flask_app;
+        access_log off;
+    }
+    
+    # ========== METRICS (Optional) ==========
+    location /metrics {
+        proxy_pass http://flask_app;
+        # Restrict access if needed
+        allow 127.0.0.1;
+        allow 192.168.0.0/16;  # Internal network
+        deny all;
+    }
+}
+
+# ========== HTTP/2 PUSH (Optional) ==========
+# For performance improvement (not widely supported)
+# Uncomment if using assets that benefit from server push
+# server {
+#     listen 443 ssl http2;
+#     server_name sched-app.example.com;
+#     
+#     http2_push /static/css/bootstrap.min.css;
+#     http2_push /static/js/bootstrap.bundle.min.js;
+# }
