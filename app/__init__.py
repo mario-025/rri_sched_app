@@ -33,7 +33,7 @@ def create_app():
     # Docker: DB_HOST=mysql (service name)
     # Local: DB_HOST=localhost
     db_host = os.getenv('DB_HOST', os.getenv('DATABASE_HOST', 'localhost'))
-    db_port = os.getenv('DB_PORT', '3306')
+    db_port = os.getenv('DB_PORT', os.getenv('DATABASE_PORT', '3306'))
     db_user = os.getenv('DB_USER', os.getenv('DATABASE_USER', 'root'))
     db_password = os.getenv('DB_PASSWORD', os.getenv('DATABASE_PASSWORD', ''))
     db_name = os.getenv('DB_NAME', os.getenv('DATABASE_NAME', 'rritmb'))
@@ -52,7 +52,7 @@ def create_app():
     
     # Session config
     app.config["SECRET_KEY"] = os.getenv('SECRET_KEY', 'your-secret-key-change-this-in-production')
-    app.config["SESSION_COOKIE_SECURE"] = False  # Set True in production with HTTPS
+    app.config["SESSION_COOKIE_SECURE"] = True
     app.config["SESSION_COOKIE_HTTPONLY"] = True
     
     # Setup logging
@@ -67,9 +67,7 @@ def create_app():
         from app.controllers.auth_controller import enforce_admin_session_timeout
 
         return enforce_admin_session_timeout()
-    
-    # ====== ERROR HANDLERS (Register FIRST before blueprints) ======
-    
+        
     @app.errorhandler(404)
     def not_found_error(error):
         """Handle 404 Not Found"""

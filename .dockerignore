@@ -50,6 +50,7 @@ venv/
 # Logs
 *.log
 logs/
+docs/
 
 # Database
 *.db
@@ -77,9 +78,3 @@ test_*.py
 # OS
 Thumbs.db
 .DS_Store
-
-# Project specific
-check_telegram_state.py
-TELEGRAM_INTEGRATION_TEST_SUMMARY.md
-FIX_TELEGRAM_IMPROVEMENTS.md
-SCHEDULER_DOKUMENTASI.md

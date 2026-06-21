@@ -1,7 +1,8 @@
 import datetime
 import calendar
+from io import BytesIO
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import flash, redirect, render_template, request, session, url_for, send_file
 from app.models.schedule import Schedule
 from app.models.user import User
 from app.models.shift import Shift
@@ -12,6 +13,9 @@ from app.controllers.auth_controller import login_required
 
 from app.services.scheduler import (
     generate_schedule
+)
+from app.services.schedule_report_generator import (
+    get_schedule_report,
 )
 
 MONTHS_ID = {
@@ -447,3 +451,81 @@ def delete_all_schedules():
         db.session.rollback()
         flash(f"Error saat menghapus jadwal: {str(e)}", "danger")
         return redirect(url_for('schedule.list_schedules'))
+
+
+# Form untuk select jadwal yang akan di-report
+@login_required
+def schedule_report_form():
+    """
+    Tampilkan form untuk memilih jadwal (tahun, bulan, schedule_type).
+    """
+    year = request.args.get('year', datetime.datetime.now().year, type=int)
+    month = request.args.get('month', datetime.datetime.now().month, type=int)
+    schedule_type = request.args.get('schedule_type', None)
+    
+    # Validate year and month
+    if month < 1 or month > 12:
+        month = datetime.datetime.now().month
+    if year < 1900 or year > 2100:
+        year = datetime.datetime.now().year
+    
+    # Get all available schedule types untuk dropdown filter
+    all_schedule_types = db.session.query(Schedule.schedule_type).distinct().all()
+    available_types = sorted([t[0] for t in all_schedule_types if t[0]])
+    
+    return render_template(
+        "schedules/schedule_report_form.html",
+        year=year,
+        month=month,
+        schedule_type=schedule_type,
+        available_types=available_types
+    )
+
+
+# Preview dari form selection
+@login_required
+def schedule_report_preview_form():
+    """
+    Redirect ke report dengan parameter dari form.
+    """
+    year = request.args.get('year', datetime.datetime.now().year, type=int)
+    month = request.args.get('month', datetime.datetime.now().month, type=int)
+    schedule_type = request.args.get('schedule_type', None)
+    
+    # Validate
+    if month < 1 or month > 12:
+        flash("Bulan tidak valid", "danger")
+        return redirect(url_for('schedule.schedule_report_form'))
+    
+    if year < 1900 or year > 2100:
+        flash("Tahun tidak valid", "danger")
+        return redirect(url_for('schedule.schedule_report_form'))
+    
+    # Redirect ke report
+    return redirect(url_for('schedule.schedule_report', year=year, month=month, schedule_type=schedule_type))
+
+
+# Generate schedule report
+@login_required
+def schedule_report():
+    """
+    Tampilkan jadwal dalam bentuk laporan dengan tampilan tabel profesional.
+    """
+    year = request.args.get('year', datetime.datetime.now().year, type=int)
+    month = request.args.get('month', datetime.datetime.now().month, type=int)
+    schedule_type = request.args.get('schedule_type', None)
+    
+    # Validate year and month
+    if month < 1 or month > 12:
+        month = datetime.datetime.now().month
+    if year < 1900 or year > 2100:
+        year = datetime.datetime.now().year
+    
+    # Generate report data
+    report_data = get_schedule_report(year, month, schedule_type)
+    
+    return render_template(
+        "schedules/report.html",
+        **report_data,
+        schedule_type=schedule_type
+    )

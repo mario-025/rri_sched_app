@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Laporan Jadwal Kerja{% endblock %}
+
+{% block content %}
+<style>
+    .paper-document {
+        background: white;
+        padding: 40px;
+        margin: 20px auto;
+        max-width: 900px;
+        border-radius: 4px;
+    }
+
+    .paper-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #333;
+        padding-bottom: 15px;
+        margin-bottom: 30px;
+    }
+
+    .logo-left,
+    .logo-right {
+        width: 80px; /* atur sesuai ukuran logo */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .logo-left img,
+    .logo-right img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .header-text {
+        flex: 1;
+        text-align: center;
+    }
+
+    .paper-header h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: bold;
+        letter-spacing: 1px;
+    }
+
+    .paper-header p {
+        margin: 5px 0;
+        font-size: 12px;
+        color: #555;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+        margin: 20px 0;
+    }
+
+    .schedule-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .schedule-table thead {
+        background-color: #f0f0f0;
+    }
+
+    .schedule-table th,
+    .schedule-table td {
+        border: 1px solid #000;
+        padding: 2px 10px;
+        text-align: center;
+    }
+
+    .schedule-table th {
+        font-weight: bold;
+        background-color: #f0f0f0;
+    }
+
+    .schedule-table tbody tr:nth-child(odd) {
+        background-color: #fafafa;
+    }
+
+    .schedule-table td {
+        min-height: 35px;
+        vertical-align: middle;
+    }
+
+    .signature-section {
+        margin-top: 50px;
+        display: flex;
+        justify-content: space-between;
+        gap: 320px;
+    }
+
+    .signature-box {
+        width: 48%;
+        text-align: center;
+        font-size: 12px;
+    }
+
+    .signature-box .title {
+        font-weight: bold;
+        margin-bottom: 90px;
+    }
+
+    .signature-line {
+        border-top: 1px solid #000;
+        height: 40px;
+        margin-bottom: 5px;
+    }
+
+    .signature-box .name-line {
+        margin-top: 20px;
+        text-align: left;
+        font-size: 11px;
+    }
+
+    .signature-box .date-line {
+        text-align: left;
+        font-size: 11px;
+    }
+
+    .action-buttons {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    .paper-document,
+    .paper-document * {
+        visibility: visible;
+    }
+
+    .paper-document {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    .btn {
+        display: none !important;
+    }
+}
+</style>
+
+<div class="container-fluid">
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+        <a href="{{ url_for('schedule.schedule_report_form') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+        <a href="{{ url_for('schedule.list_schedules') }}" class="btn btn-info">
+            <i class="fas fa-calendar"></i> Ke Kalender
+        </a>
+        <button onclick="window.print()" class="btn btn-primary">
+            <i class="fas fa-print"></i> Print
+        </button>
+    </div>
+
+    <!-- Paper Document Preview -->
+    <div class="paper-document">
+        
+        <!-- Header / Kop Surat -->
+        <div class="paper-header">
+            <div class="logo-left">
+                <img src="{{ url_for('static', filename='images/rri.png') }}" alt="RRI">
+            </div>
+
+            <div class="header-text">
+                <h3>{{ company_name }}</h3>
+                <p>{{ company_address }}</p>
+            </div>
+
+            <div class="logo-right">
+                <img src="{{ url_for('static', filename='images/rri_tmb.png') }}" alt="RRI TMB">
+            </div>
+        </div>
+
+        <!-- Tabel Jadwal -->
+        <div class="table-wrapper">
+            <table class="schedule-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px;">Hari/Tanggal</th>
+                        {% for shift_name in shift_names %}
+                        <th>{{ shift_name }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if schedule_data %}
+                        {% for schedule in schedule_data %}
+                        <tr>
+                            <td>{{ schedule.day_name }}, {{ schedule.date }}</td>
+                            {% for shift_name in shift_names %}
+                                {% set users = schedule.shifts.get(shift_name, []) %}
+                                <td>
+                                    {% if users %}
+                                        {{ users|join(', ') }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="100%" style="padding: 20px; text-align: center; color: #999;">
+                            Tidak ada data jadwal untuk periode ini
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Signature Section -->
+        <div class="signature-section">
+            <div class="signature-box">
+                <div class="title">Kepala Bagian</div>
+                <div class="signature-line"></div>
+            </div>
+            <div class="signature-box">
+                <div class="title">Ketua Tim</div>
+                <div class="signature-line"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

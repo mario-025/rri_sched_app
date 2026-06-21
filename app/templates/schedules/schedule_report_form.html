@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Lihat Laporan Jadwal{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-5 mx-auto">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Lihat Laporan Jadwal</h5>
+            </div>
+            <div class="card-body p-4">
+                
+                <form method="GET" action="{{ url_for('schedule.schedule_report_preview_form') }}">
+                    
+                    <!-- Tahun -->
+                    <div class="mb-3">
+                        <label for="year" class="form-label">
+                            <strong>Tahun</strong>
+                        </label>
+                        <input
+                            type="number"
+                            name="year"
+                            id="year"
+                            class="form-control form-control-lg"
+                            value="{{ year }}"
+                            min="2020"
+                            max="2050"
+                            required
+                        >
+                    </div>
+
+                    <!-- Bulan -->
+                    <div class="mb-3">
+                        <label for="month" class="form-label">
+                            <strong>Bulan</strong>
+                        </label>
+                        <select
+                            name="month"
+                            id="month"
+                            class="form-select form-select-lg"
+                            required
+                        >
+                            <option value="">-- Pilih Bulan --</option>
+                            {% set months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] %}
+                            {% for m in range(1, 13) %}
+                            <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ months[m-1] }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Schedule Type (Filter) -->
+                    <div class="mb-4">
+                        <label for="schedule_type" class="form-label">
+                            <strong>Jenis Jadwal (Opsional)</strong>
+                        </label>
+                        <select
+                            name="schedule_type"
+                            id="schedule_type"
+                            class="form-select form-select-lg"
+                        >
+                            <option value="">-- Semua Jenis --</option>
+                            {% for type_name in available_types %}
+                            <option value="{{ type_name }}" {% if type_name == schedule_type %}selected{% endif %}>{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted d-block mt-2">
+                            Biarkan kosong untuk menampilkan semua jadwal bulan ini
+                        </small>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-eye me-2"></i>Lihat Preview
+                        </button>
+                        <a href="{{ url_for('schedule.list_schedules') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Kembali
+                        </a>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="alert alert-info" role="alert">
+                    <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Tips</h6>
+                    <ul class="mb-0">
+                        <li>Pilih tahun dan bulan yang ingin dilihat</li>
+                        <li>Klik "Lihat Preview" untuk melihat dalam bentuk kertas</li>
+                        <li>Di preview, Anda bisa Print, Export Excel, atau Export PDF</li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

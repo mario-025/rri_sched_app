@@ -9,7 +9,10 @@ from app.controllers.schedule_controller import (
     edit_schedule_form,
     update_schedule,
     delete_schedule,
-    delete_all_schedules
+    delete_all_schedules,
+    schedule_report_form,
+    schedule_report_preview_form,
+    schedule_report,
 )
 
 schedule_bp = Blueprint(
@@ -69,3 +72,21 @@ schedule_bp.route(
     "/delete-all",
     methods=["POST"]
 )(delete_all_schedules)
+
+# Schedule report form
+schedule_bp.route(
+    "/report-form",
+    methods=["GET"]
+)(schedule_report_form)
+
+# Schedule report preview from form
+schedule_bp.route(
+    "/report-preview",
+    methods=["GET"]
+)(schedule_report_preview_form)
+
+# Schedule report
+schedule_bp.route(
+    "/report",
+    methods=["GET"]
+)(schedule_report)
