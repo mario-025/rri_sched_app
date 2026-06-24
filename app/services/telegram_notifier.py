@@ -16,6 +16,27 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
+# Konfigurasi reminder shift pegawai
+# (menit_sebelum_shift, notification_type, judul, isi_intro)
+BEFORE_SHIFT_REMINDER_CONFIG = [
+    (24 * 60, "reminder_1day",    "Reminder 1 Hari Sebelum Shift",   "Besok Anda memiliki jadwal kerja."),
+    (12 * 60, "reminder_12hours", "Reminder 12 Jam Sebelum Shift",   "Shift Anda dimulai 12 jam lagi."),
+    (60,      "reminder_1hour",   "Reminder 1 Jam Sebelum Shift",    "Shift Anda akan dimulai dalam 1 jam."),
+    (30,      "reminder_30min",   "Reminder 30 Menit Sebelum Shift", "Shift Anda akan dimulai dalam 30 menit."),
+    (10,      "reminder_10min",   "Reminder 10 Menit Sebelum Shift", "Shift Anda akan dimulai dalam 10 menit."),
+    (5,       "reminder_5min",    "Reminder 5 Menit Sebelum Shift",  "Shift Anda akan dimulai dalam 5 menit."),
+]
+
+# KONFIGURASI DIGEST JADWAL MINGGUAN
+# Dikirim 2x sehari: pagi & malam — berisi semua jadwal 7 hari ke depan.
+DIGEST_MORNING_HOUR   = int(os.getenv("DIGEST_MORNING_HOUR",   "7"))
+DIGEST_MORNING_MINUTE = int(os.getenv("DIGEST_MORNING_MINUTE", "0"))
+DIGEST_EVENING_HOUR   = int(os.getenv("DIGEST_EVENING_HOUR",   "21"))
+DIGEST_EVENING_MINUTE = int(os.getenv("DIGEST_EVENING_MINUTE", "0"))
+DIGEST_LOOKAHEAD_DAYS = int(os.getenv("DIGEST_LOOKAHEAD_DAYS", "7"))
+
+DAY_NAMES_ID = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu"]
+
 
 class TelegramScheduleNotifier:
     """Background scheduler untuk reminder jadwal lewat Telegram."""
@@ -26,8 +47,7 @@ class TelegramScheduleNotifier:
         self.api_url = f"https://api.telegram.org/bot{token}"
         self.stop_event = threading.Event()
         self.interval_seconds = int(os.getenv("TELEGRAM_NOTIFIER_INTERVAL", "30"))
-        timezone_name = os.getenv("APP_TIMEZONE", "Asia/Makassar")
-        self.timezone = ZoneInfo(timezone_name)
+        self.timezone = ZoneInfo(os.getenv("APP_TIMEZONE", "Asia/Makassar"))
 
     def stop(self):
         self.stop_event.set()
@@ -54,37 +74,71 @@ class TelegramScheduleNotifier:
         except SQLAlchemyError as e:
             logger.error(f"Failed to ensure telegram_notifications table: {e}")
 
+    # ENTRY POINT — dipanggil setiap interval
     def process_due_notifications(self):
         now = datetime.datetime.now(self.timezone).replace(second=0, microsecond=0)
 
-        due_items = []
-        due_items.extend(self._fixed_time_due_items(now))
-        due_items.extend(self._before_shift_due_items(now))
+        # 1. Digest jadwal mingguan (per user, 2x sehari)
+        for user, notification_type, schedules in self._digest_due_items(now):
+            self._send_digest_once(user, notification_type, schedules, now)
 
-        for schedule, notification_type in due_items:
-            self._send_once(schedule, notification_type)
+        # 2. Reminder per-shift (1 hari / 12 jam / 1 jam / 30 mnt / 10 mnt / 5 mnt)
+        for schedule, notification_type in self._before_shift_due_items(now):
+            self._send_schedule_once(schedule, notification_type)
 
-    def _fixed_time_due_items(self, now):
+    # Digest jadwal mingguan
+
+    def _digest_due_items(self, now):
+        """
+        Periksa apakah sekarang waktunya kirim digest pagi atau malam.
+        Return list of (user, notification_type, schedules).
+        Hanya users yang punya jadwal dalam 7 hari ke depan yang diproses.
+        """
+        is_morning = (now.hour == DIGEST_MORNING_HOUR and now.minute == DIGEST_MORNING_MINUTE)
+        is_evening = (now.hour == DIGEST_EVENING_HOUR and now.minute == DIGEST_EVENING_MINUTE)
+
+        if not (is_morning or is_evening):
+            return []
+
+        # notification_type menyertakan tanggal agar idempoten per hari
+        period = "pagi" if is_morning else "malam"
+        notification_type = f"digest_{period}_{now.date()}"  # contoh: "digest_pagi_2024-01-15"
+
+        users = User.query.filter(
+            User.telegram_id.isnot(None),
+            User.telegram_verified.is_(True),
+            User.telegram_enabled.is_(True),
+        ).all()
+
+        start_date = now.date()
+        end_date   = start_date + datetime.timedelta(days=DIGEST_LOOKAHEAD_DAYS - 1)
+
         items = []
-
-        if now.hour == 22 and now.minute == 0:
-            tomorrow = now.date() + datetime.timedelta(days=1)
-            items.extend(
-                (schedule, "reminder_1day")
-                for schedule in self._active_schedules_for_date(tomorrow)
+        for user in users:
+            schedules = (
+                Schedule.query
+                .filter(
+                    Schedule.user_id == user.id,
+                    Schedule.work_date >= start_date,
+                    Schedule.work_date <= end_date,
+                )
+                .order_by(Schedule.work_date, Schedule.id)
+                .all()
             )
-
-        if now.hour == 7 and now.minute == 0:
-            today = now.date()
-            items.extend(
-                (schedule, "reminder_today_7am")
-                for schedule in self._active_schedules_for_date(today)
-            )
+            # Hanya kirim digest kalau user punya jadwal mendatang
+            if schedules:
+                items.append((user, notification_type, schedules))
 
         return items
 
+    # Reminder per-shift
     def _before_shift_due_items(self, now):
-        items = []
+        """
+        Untuk setiap konfigurasi di BEFORE_SHIFT_REMINDER_CONFIG, cek apakah
+        sekarang tepat waktunya mengirim reminder ke masing-masing user.
+        Return list of (schedule, notification_type).
+        """
+
         target_dates = {
             now.date(),
             now.date() + datetime.timedelta(days=1),
@@ -102,51 +156,87 @@ class TelegramScheduleNotifier:
             .all()
         )
 
+        items = []
         for schedule in schedules:
             start_at = datetime.datetime.combine(
                 schedule.work_date,
                 schedule.shift.start_time,
-                tzinfo=self.timezone
+                tzinfo=self.timezone,
             ).replace(second=0, microsecond=0)
 
-            if now == start_at - datetime.timedelta(minutes=10):
-                items.append((schedule, "reminder_10min"))
-
-            if now == start_at - datetime.timedelta(minutes=5):
-                items.append((schedule, "reminder_5min"))
+            for minutes_before, notification_type, _, _ in BEFORE_SHIFT_REMINDER_CONFIG:
+                trigger_at = start_at - datetime.timedelta(minutes=minutes_before)
+                if now == trigger_at:
+                    items.append((schedule, notification_type))
 
         return items
 
-    def _active_schedules_for_date(self, work_date):
-        return (
-            Schedule.query
-            .join(User, Schedule.user_id == User.id)
-            .filter(
-                Schedule.work_date == work_date,
-                User.telegram_id.isnot(None),
-                User.telegram_verified.is_(True),
-                User.telegram_enabled.is_(True),
-            )
-            .all()
-        )
-
-    def _send_once(self, schedule, notification_type):
-        already_attempted = TelegramNotification.query.filter_by(
-            schedule_id=schedule.id,
-            notification_type=notification_type
+    # Digest jadwal mingguan (idempoten per user + tanggal + pagi/malam)
+    def _send_digest_once(self, user, notification_type, schedules, now):
+        """
+        Kirim digest; skip jika sudah ada record untuk user + notification_type hari ini.
+        Deduplication menggunakan (user_id, notification_type) karena schedule_id = NULL.
+        """
+        already = TelegramNotification.query.filter_by(
+            user_id=user.id,
+            notification_type=notification_type,
         ).first()
 
-        if already_attempted:
+        if already:
             return
 
-        title, message = self._build_message(schedule, notification_type)
+        title, message = self._build_digest_message(user, schedules, now)
+        notification = TelegramNotification(
+            user_id=user.id,
+            schedule_id=None,
+            notification_type=notification_type,
+            title=title,
+            message=message,
+            status="pending",
+        )
+        db.session.add(notification)
+        db.session.flush()
+
+        try:
+            result = self._send_message(user.telegram_id, message)
+            if result.get("ok"):
+                notification.status = "sent"
+                notification.sent_at = datetime.datetime.now()
+                logger.info(f"Digest sent: user={user.id}, type={notification_type}")
+            else:
+                notification.status = "failed"
+                notification.error_message = str(result)
+                logger.warning(f"Digest failed: user={user.id}, result={result}")
+        except Exception as e:
+            notification.status = "failed"
+            notification.error_message = str(e)
+            logger.error(f"Digest send error: user={user.id}, error={e}")
+
+        db.session.commit()
+
+    # Reminder per-shift (idempoten per schedule_id + notification_type)
+    def _send_schedule_once(self, schedule, notification_type):
+        """
+        Kirim reminder shift; skip jika sudah pernah dikirim (atau dicoba).
+        Deduplication dijamin oleh index idx_telegram_notification_once
+        pada (schedule_id, notification_type).
+        """
+        already = TelegramNotification.query.filter_by(
+            schedule_id=schedule.id,
+            notification_type=notification_type,
+        ).first()
+
+        if already:
+            return
+
+        title, message = self._build_schedule_message(schedule, notification_type)
         notification = TelegramNotification(
             user_id=schedule.user_id,
             schedule_id=schedule.id,
             notification_type=notification_type,
             title=title,
             message=message,
-            status="pending"
+            status="pending",
         )
         db.session.add(notification)
         db.session.flush()
@@ -157,71 +247,129 @@ class TelegramScheduleNotifier:
                 notification.status = "sent"
                 notification.sent_at = datetime.datetime.now()
                 logger.info(
-                    f"Telegram notification sent: schedule={schedule.id}, "
+                    f"Schedule reminder sent: schedule={schedule.id}, "
                     f"type={notification_type}"
                 )
             else:
                 notification.status = "failed"
                 notification.error_message = str(result)
-                logger.warning(f"Telegram notification failed: {result}")
+                logger.warning(f"Schedule reminder failed: {result}")
         except Exception as e:
             notification.status = "failed"
             notification.error_message = str(e)
-            logger.error(f"Telegram send error: {e}")
+            logger.error(f"Schedule reminder send error: {e}")
 
         db.session.commit()
 
+    # TELEGRAM API
     def _send_message(self, chat_id, text):
         response = requests.post(
             f"{self.api_url}/sendMessage",
-            json={
-                "chat_id": chat_id,
-                "text": text,
-                "parse_mode": "HTML",
-            },
-            timeout=10
+            json={"chat_id": chat_id, "text": text, "parse_mode": "HTML"},
+            timeout=10,
         )
         return response.json()
 
-    def _build_message(self, schedule, notification_type):
-        shift = schedule.shift
-        work_date = schedule.work_date.strftime("%d %b %Y")
-        time_range = (
+    # PESAN: Digest jadwal mingguan
+    def _build_digest_message(self, user, schedules, now):
+        """
+        Contoh output:
+        ──────────────────────────────
+        📅 Jadwal Kerja 7 Hari Ke Depan
+        24 Jun – 30 Jun 2025
+
+        Selamat pagi, Budi Santoso!
+        Berikut jadwal kerja Anda minggu ini:
+
+        📌 Senin, 24 Jun 2025
+             Shift Pagi  |  06:00 - 14:00
+
+        📌 Rabu, 26 Jun 2025
+             Shift Siang  |  14:00 - 22:00
+        ──────────────────────────────
+        """
+        is_morning = now.hour < 12
+        greeting   = "Selamat pagi" if is_morning else "Selamat malam"
+        title      = f"📅 Jadwal Kerja {DIGEST_LOOKAHEAD_DAYS} Hari Ke Depan"
+        end_date   = now.date() + datetime.timedelta(days=DIGEST_LOOKAHEAD_DAYS - 1)
+        date_range = (
+            f"{now.date().strftime('%d %b')} – {end_date.strftime('%d %b %Y')}"
+        )
+
+        lines = []
+        for schedule in schedules:
+            day_name   = DAY_NAMES_ID[schedule.work_date.weekday()]
+            date_str   = schedule.work_date.strftime("%d %b %Y")
+            time_range = self._format_time_range(schedule.shift)
+            lines.append(
+                f"📌 <b>{day_name}, {date_str}</b>\n"
+                f"     {schedule.shift.shift_name}  |  {time_range}"
+            )
+
+        schedule_body = "\n\n".join(lines)
+
+        message = (
+            f"<b>{title}</b>\n"
+            f"<i>{date_range}</i>\n\n"
+            f"{greeting}, <b>{user.fullname}</b>!\n"
+            f"Berikut jadwal kerja Anda untuk {DIGEST_LOOKAHEAD_DAYS} hari ke depan:\n\n"
+            f"{schedule_body}"
+        )
+
+        return title, message
+
+    # PESAN: Reminder per-shift
+    def _build_schedule_message(self, schedule, notification_type):
+        """
+        Contoh output (reminder_1hour):
+        ──────────────────────────────
+        🔔 Reminder 1 Jam Sebelum Shift
+
+        Halo Budi Santoso,
+        Shift Anda akan dimulai dalam 1 jam.
+
+        Shift  : Shift Pagi
+        Hari   : Senin, 24 Jun 2025
+        Waktu  : 06:00 - 14:00
+        Jenis  : Regular
+        ──────────────────────────────
+        """
+        shift      = schedule.shift
+        day_name   = DAY_NAMES_ID[schedule.work_date.weekday()]
+        date_str   = schedule.work_date.strftime("%d %b %Y")
+        time_range = self._format_time_range(shift)
+
+        title, intro = self._resolve_reminder_label(notification_type)
+
+        message = (
+            f"<b>🔔 {title}</b>\n\n"
+            f"Halo <b>{schedule.user.fullname}</b>,\n"
+            f"{intro}\n\n"
+            f"<b>Shift  :</b> {shift.shift_name}\n"
+            f"<b>Hari   :</b> {day_name}, {date_str}\n"
+            f"<b>Waktu  :</b> {time_range}\n"
+            f"<b>Jenis  :</b> {schedule.schedule_type}"
+        )
+
+        return title, message
+
+    def _format_time_range(self, shift):
+        return (
             f"{shift.start_time.strftime('%H:%M')} - "
             f"{shift.end_time.strftime('%H:%M')}"
         )
 
-        if notification_type == "reminder_1day":
-            title = "Reminder jadwal besok"
-            intro = "Besok Anda memiliki jadwal kerja."
-        elif notification_type == "reminder_today_7am":
-            title = "Reminder jadwal hari ini"
-            intro = "Hari ini Anda memiliki jadwal kerja."
-        elif notification_type == "reminder_10min":
-            title = "Reminder 10 menit sebelum shift"
-            intro = "Shift Anda akan dimulai dalam 10 menit."
-        else:
-            title = "Reminder 5 menit sebelum shift"
-            intro = "Shift Anda akan dimulai dalam 5 menit."
+    def _resolve_reminder_label(self, notification_type):
+        """Ambil (title, intro) dari BEFORE_SHIFT_REMINDER_CONFIG."""
+        for _, ntype, title, intro in BEFORE_SHIFT_REMINDER_CONFIG:
+            if ntype == notification_type:
+                return title, intro
+        logger.warning(f"Unknown notification_type: {notification_type}")
+        return "Reminder Jadwal", "Anda memiliki jadwal kerja."
 
-        message = f"""
-<b>{title}</b>
-
-Halo {schedule.user.fullname},
-{intro}
-
-<b>Shift:</b> {shift.shift_name}
-<b>Waktu:</b> {time_range}
-<b>Tanggal:</b> {work_date}
-<b>Jenis Jadwal:</b> {schedule.schedule_type}
-        """.strip()
-
-        return title, message
-
-
-notifier_thread = None
+notifier_thread   = None
 notifier_instance = None
-notifier_lock = threading.Lock()
+notifier_lock     = threading.Lock()
 
 
 def start_notifier_thread(app, token):
@@ -236,7 +384,7 @@ def start_notifier_thread(app, token):
         notifier_thread = threading.Thread(
             target=notifier_instance.run,
             name="telegram-schedule-notifier",
-            daemon=True
+            daemon=True,
         )
         notifier_thread.start()
 
