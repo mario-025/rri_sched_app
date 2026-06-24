@@ -250,6 +250,18 @@ def list_schedules():
     # Get all available schedule types untuk dropdown filter
     all_schedule_types = db.session.query(Schedule.schedule_type).distinct().all()
     available_types = sorted([t[0] for t in all_schedule_types if t[0]])
+
+    first_day = datetime.date(year, month, 1)
+    last_day = datetime.date(
+        year,
+        month,
+        calendar.monthrange(year, month)[1]
+    )
+    month_schedule_types = db.session.query(Schedule.schedule_type).filter(
+        Schedule.work_date >= first_day,
+        Schedule.work_date <= last_day
+    ).distinct().all()
+    delete_available_types = sorted([t[0] for t in month_schedule_types if t[0]])
     
     cal, schedules_by_date = get_calendar_data(year, month, schedule_type)
     
@@ -277,6 +289,7 @@ def list_schedules():
         prev_month=prev_month,
         next_month=next_month,
         available_types=available_types,
+        delete_available_types=delete_available_types,
         selected_type=schedule_type
     )
 
@@ -480,6 +493,71 @@ def delete_all_schedules():
         db.session.rollback()
         flash(f"Error saat menghapus jadwal: {str(e)}", "danger")
         return redirect(url_for('schedule.list_schedules'))
+
+
+@admin_only
+def delete_schedules_by_type():
+    year = request.form.get("year", type=int)
+    month = request.form.get("month", type=int)
+    schedule_type = request.form.get("schedule_type", "").strip()
+
+    if not schedule_type:
+        flash("Jenis jadwal harus dipilih", "danger")
+        return redirect(url_for("schedule.list_schedules"))
+
+    if not year or year < 1900 or year > 2100:
+        flash("Tahun tidak valid", "danger")
+        return redirect(url_for("schedule.list_schedules"))
+
+    if not month or month < 1 or month > 12:
+        flash("Bulan tidak valid", "danger")
+        return redirect(url_for("schedule.list_schedules", year=year))
+
+    first_day = datetime.date(year, month, 1)
+    last_day = datetime.date(
+        year,
+        month,
+        calendar.monthrange(year, month)[1]
+    )
+
+    try:
+        schedules = Schedule.query.options(
+            db.joinedload(Schedule.user),
+            db.joinedload(Schedule.shift)
+        ).filter(
+            Schedule.work_date >= first_day,
+            Schedule.work_date <= last_day,
+            Schedule.schedule_type == schedule_type
+        ).all()
+
+        if not schedules:
+            flash(
+                f"Tidak ada jadwal '{schedule_type}' pada {MONTHS_ID.get(month)} {year}",
+                "info"
+            )
+            return redirect(url_for("schedule.list_schedules", year=year, month=month))
+
+        total_schedules = len(schedules)
+
+        for schedule in schedules:
+            if schedule.user and schedule.shift:
+                schedule.user.score -= schedule.shift.score
+            db.session.delete(schedule)
+
+        db.session.commit()
+
+        flash(
+            (
+                f"{total_schedules} jadwal '{schedule_type}' pada "
+                f"{MONTHS_ID.get(month)} {year} berhasil dihapus dan score user dikembalikan"
+            ),
+            "success"
+        )
+    except Exception as e:
+        db.session.rollback()
+        flash(f"Error saat menghapus jadwal berdasarkan jenis: {str(e)}", "danger")
+
+    return redirect(url_for("schedule.list_schedules", year=year, month=month))
 
 
 # Form untuk select jadwal yang akan di-report

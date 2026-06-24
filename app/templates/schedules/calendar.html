@@ -17,6 +17,11 @@
         <a href="{{ url_for('schedule.schedule_form') }}" class="btn btn-primary">
             + Generate Jadwal Baru
         </a>
+        {% if session.get('login_type') == 'admin' and delete_available_types %}
+            <button type="button" class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#deleteByTypeModal">
+                Hapus Jenis Jadwal
+            </button>
+        {% endif %}
         <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteAllModal">
             Hapus Semua Jadwal
         </button>
@@ -53,6 +58,54 @@
                         </button>
                     </form>
                 </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% if session.get('login_type') == 'admin' and delete_available_types %}
+    <!-- Modal Konfirmasi Hapus Berdasarkan Jenis Jadwal -->
+    <div class="modal fade" id="deleteByTypeModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning">
+                    <h5 class="modal-title">Hapus Jenis Jadwal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="{{ url_for('schedule.delete_schedules_by_type') }}">
+                    <div class="modal-body">
+                        <p>
+                            Pilih jenis jadwal yang akan dihapus untuk bulan <strong>{{ month_name }} {{ year }}</strong>.
+                        </p>
+                        <div class="mb-3">
+                            <label for="deleteScheduleType" class="form-label">
+                                <strong>Jenis Jadwal</strong>
+                            </label>
+                            <select id="deleteScheduleType" name="schedule_type" class="form-select" required>
+                                <option value="">-- Pilih Jenis Jadwal --</option>
+                                {% for schedule_type in delete_available_types %}
+                                    <option value="{{ schedule_type }}" {% if selected_type == schedule_type %}selected{% endif %}>
+                                        {{ schedule_type|title }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <input type="hidden" name="year" value="{{ year }}">
+                        <input type="hidden" name="month" value="{{ month }}">
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Jadwal dengan jenis yang dipilih hanya akan dihapus pada bulan ini. Score karyawan akan dikembalikan sesuai jadwal yang dihapus.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Batal
+                        </button>
+                        <button type="submit" class="btn btn-warning">
+                            Ya, Hapus Jenis Ini
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
