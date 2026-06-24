@@ -214,6 +214,73 @@ class TelegramScheduleNotifier:
 
         db.session.commit()
 
+    def send_manual_digest_to_all_users(self):
+        """
+        Kirim digest 7 hari ke depan ke semua user Telegram aktif.
+        Dipakai oleh tombol admin, jadi tidak memakai dedup digest otomatis.
+        """
+        now = datetime.datetime.now(self.timezone).replace(second=0, microsecond=0)
+        notification_type = f"manual_digest_{now.strftime('%Y%m%d%H%M%S')}"
+        start_date = now.date()
+        end_date = start_date + datetime.timedelta(days=DIGEST_LOOKAHEAD_DAYS - 1)
+
+        users = User.query.filter(
+            User.telegram_id.isnot(None),
+            User.telegram_verified.is_(True),
+            User.telegram_enabled.is_(True),
+        ).all()
+
+        sent_count = 0
+        failed_count = 0
+
+        for user in users:
+            schedules = (
+                Schedule.query
+                .filter(
+                    Schedule.user_id == user.id,
+                    Schedule.work_date >= start_date,
+                    Schedule.work_date <= end_date,
+                )
+                .order_by(Schedule.work_date, Schedule.id)
+                .all()
+            )
+
+            title, message = self._build_digest_message(user, schedules, now)
+            notification = TelegramNotification(
+                user_id=user.id,
+                schedule_id=None,
+                notification_type=notification_type,
+                title=title,
+                message=message,
+                status="pending",
+            )
+            db.session.add(notification)
+            db.session.flush()
+
+            try:
+                result = self._send_message(user.telegram_id, message)
+                if result.get("ok"):
+                    notification.status = "sent"
+                    notification.sent_at = datetime.datetime.now()
+                    sent_count += 1
+                else:
+                    notification.status = "failed"
+                    notification.error_message = str(result)
+                    failed_count += 1
+                    logger.warning(f"Manual digest failed: user={user.id}, result={result}")
+            except Exception as e:
+                notification.status = "failed"
+                notification.error_message = str(e)
+                failed_count += 1
+                logger.error(f"Manual digest send error: user={user.id}, error={e}")
+
+        db.session.commit()
+        return {
+            "users": len(users),
+            "sent": sent_count,
+            "failed": failed_count,
+        }
+
     # Reminder per-shift (idempoten per schedule_id + notification_type)
     def _send_schedule_once(self, schedule, notification_type):
         """
@@ -307,6 +374,8 @@ class TelegramScheduleNotifier:
             )
 
         schedule_body = "\n\n".join(lines)
+        if not schedule_body:
+            schedule_body = f"Tidak ada jadwal kerja dalam {DIGEST_LOOKAHEAD_DAYS} hari ke depan."
 
         message = (
             f"<b>{title}</b>\n"

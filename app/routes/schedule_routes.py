@@ -10,6 +10,7 @@ from app.controllers.schedule_controller import (
     update_schedule,
     delete_schedule,
     delete_all_schedules,
+    send_digest_reminders,
     schedule_report_form,
     schedule_report_preview_form,
     schedule_report,
@@ -72,6 +73,12 @@ schedule_bp.route(
     "/delete-all",
     methods=["POST"]
 )(delete_all_schedules)
+
+# Kirim digest 7 hari ke depan ke semua user Telegram aktif
+schedule_bp.route(
+    "/send-digest-reminders",
+    methods=["POST"]
+)(send_digest_reminders)
 
 # Schedule report form
 schedule_bp.route(

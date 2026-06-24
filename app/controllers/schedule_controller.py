@@ -1,15 +1,17 @@
 import datetime
 import calendar
+import os
 from io import BytesIO
 
-from flask import flash, redirect, render_template, request, session, url_for, send_file
+from flask import current_app, flash, redirect, render_template, request, session, url_for, send_file
 from app.models.schedule import Schedule
 from app.models.user import User
 from app.models.shift import Shift
 from app.models.shift_pattern import ShiftPattern
 from app.config.database import db
 from sqlalchemy import func
-from app.controllers.auth_controller import login_required
+from app.controllers.auth_controller import admin_only, login_required
+from app.services.telegram_notifier import TelegramScheduleNotifier
 
 from app.services.scheduler import (
     generate_schedule
@@ -314,6 +316,33 @@ def schedule_detail(work_date):
         work_date=work_date,
         schedules=schedules
     )
+
+
+@admin_only
+def send_digest_reminders():
+    telegram_token = os.getenv("TELEGRAM_BOT_TOKEN")
+    telegram_enabled = os.getenv("TELEGRAM_BOT_ENABLED", "true").lower() == "true"
+
+    if not telegram_enabled or not telegram_token:
+        flash("Telegram bot belum aktif atau token belum dikonfigurasi", "warning")
+        return redirect(url_for("schedule.list_schedules"))
+
+    notifier = TelegramScheduleNotifier(current_app._get_current_object(), telegram_token)
+    result = notifier.send_manual_digest_to_all_users()
+
+    if result["users"] == 0:
+        flash("Tidak ada user Telegram aktif yang bisa dikirim pengingat", "warning")
+    else:
+        flash(
+            (
+                f"Pengingat digest 7 hari selesai. "
+                f"Target user: {result['users']}, terkirim: {result['sent']}, "
+                f"gagal: {result['failed']}."
+            ),
+            "success" if result["failed"] == 0 else "warning"
+        )
+
+    return redirect(url_for("schedule.list_schedules"))
 
 
 # Form edit schedule

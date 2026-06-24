@@ -9,6 +9,11 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>Kalender Jadwal Kerja</h1>
     <div class="d-flex gap-2">
+        {% if session.get('login_type') == 'admin' %}
+            <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#sendDigestModal">
+                <i class="fab fa-telegram me-2"></i>Ingatkan Semua User
+            </button>
+        {% endif %}
         <a href="{{ url_for('schedule.schedule_form') }}" class="btn btn-primary">
             + Generate Jadwal Baru
         </a>
@@ -17,6 +22,41 @@
         </button>
     </div>
 </div>
+
+{% if session.get('login_type') == 'admin' %}
+    <!-- Modal Konfirmasi Kirim Digest -->
+    <div class="modal fade" id="sendDigestModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="fab fa-telegram me-2"></i>Ingatkan Semua User
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="alert alert-info mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                            Anda akan mengirimkan pengingat jadwal kepada semua pegawai.
+                            <br>
+                            Ingin mengirimkan pengingat sekarang?
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        Batal
+                    </button>
+                    <form method="POST" action="{{ url_for('schedule.send_digest_reminders') }}" style="display: inline;">
+                        <button type="submit" class="btn btn-info text-white">
+                            <i class="fab fa-telegram me-2"></i>Kirim Sekarang
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
 
 <!-- Modal Konfirmasi Hapus Semua -->
 <div class="modal fade" id="deleteAllModal" tabindex="-1">
