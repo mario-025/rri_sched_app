@@ -69,6 +69,7 @@ def get_all_users():
         query = query.order_by(User.fullname.asc())
     
     users = query.all()
+    total_users = User.query.count()
     
     # Prepare upcoming schedules for each user
     now = datetime.now()
@@ -86,6 +87,7 @@ def get_all_users():
     return render_template(
         'admin/users/index.html', 
         users=users, 
+        total_users=total_users,
         user_schedules=user_schedules,
         search_query=search_query,
         sort_by=sort_by

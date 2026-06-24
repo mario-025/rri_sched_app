@@ -355,7 +355,7 @@ def send_digest_reminders():
             "success" if result["failed"] == 0 else "warning"
         )
 
-    return redirect(url_for("schedule.list_schedules"))
+    return redirect(request.referrer or url_for("schedule.list_schedules"))
 
 
 # Form edit schedule

@@ -13,13 +13,13 @@
             Tambah Shift Baru
         </a>
     </div>
-    <button type="button" class="btn btn-outline-info btn-sm" id="tipBtn" data-expanded="false">
+    <button type="button" class="btn btn-info btn-sm text-white" id="tipBtn" data-expanded="true">
         Tip
     </button>
 </div>
 
 <!-- Tip/Penjelasan yang bisa di-toggle -->
-<div id="tipContainer" class="alert alert-light border-info mb-4" style="display: none;">
+<div id="tipContainer" class="alert alert-light border-info mb-4">
     <h6 class="alert-heading">Apa itu Shift dan Index?</h6>
     <p class="mb-2"><strong>Shift</strong> adalah jadwal kerja dengan waktu mulai dan jam selesai tertentu.</p>
     <p class="mb-2"><strong>Index</strong> adalah urutan shift dalam sistem (1 = pertama, 2 = kedua, dst).</p>
@@ -143,8 +143,9 @@
     // Initialize tip button styling
     document.addEventListener('DOMContentLoaded', function() {
         const tipBtn = document.getElementById('tipBtn');
+        tipBtn.style.backgroundColor = '#0dcaf0';
         tipBtn.style.borderColor = '#0dcaf0';
-        tipBtn.style.color = '#0dcaf0';
+        tipBtn.style.color = 'white';
     });
 </script>
 

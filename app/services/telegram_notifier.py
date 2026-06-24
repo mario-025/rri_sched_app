@@ -355,8 +355,7 @@ class TelegramScheduleNotifier:
              Shift Siang  |  14:00 - 22:00
         ──────────────────────────────
         """
-        is_morning = now.hour < 12
-        greeting   = "Selamat pagi" if is_morning else "Selamat malam"
+        greeting   = self._resolve_time_greeting(now)
         title      = f"📅 Jadwal Kerja {DIGEST_LOOKAHEAD_DAYS} Hari Ke Depan"
         end_date   = now.date() + datetime.timedelta(days=DIGEST_LOOKAHEAD_DAYS - 1)
         date_range = (
@@ -427,6 +426,15 @@ class TelegramScheduleNotifier:
             f"{shift.start_time.strftime('%H:%M')} - "
             f"{shift.end_time.strftime('%H:%M')}"
         )
+
+    def _resolve_time_greeting(self, now):
+        if 4 <= now.hour < 11:
+            return "Selamat pagi"
+        if 11 <= now.hour < 15:
+            return "Selamat siang"
+        if 15 <= now.hour < 18:
+            return "Selamat sore"
+        return "Selamat malam"
 
     def _resolve_reminder_label(self, notification_type):
         """Ambil (title, intro) dari BEFORE_SHIFT_REMINDER_CONFIG."""

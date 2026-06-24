@@ -13,13 +13,13 @@
             Tambah Pola Shift Baru
         </a>
     </div>
-    <button type="button" class="btn btn-outline-info btn-sm" id="tipBtn" data-expanded="false">
+    <button type="button" class="btn btn-info btn-sm text-white" id="tipBtn" data-expanded="true">
         Tip
     </button>
 </div>
 
 <!-- Tip/Penjelasan yang bisa di-toggle -->
-<div id="tipContainer" class="alert alert-light border-info mb-4" style="display: none;">
+<div id="tipContainer" class="alert alert-light border-info mb-4">
     <h6 class="alert-heading">Apa itu Pola Shift?</h6>
     <p class="mb-2"><strong>Pola Shift</strong> adalah kombinasi dari beberapa shift yang digunakan untuk generate jadwal kerja.</p>
     <p class="mb-2\"><strong>Contoh Pola Standar (3 Shift):</strong></p>
@@ -158,8 +158,9 @@
     // Initialize tip button styling
     document.addEventListener('DOMContentLoaded', function() {
         const tipBtn = document.getElementById('tipBtn');
+        tipBtn.style.backgroundColor = '#0dcaf0';
         tipBtn.style.borderColor = '#0dcaf0';
-        tipBtn.style.color = '#0dcaf0';
+        tipBtn.style.color = 'white';
     });
 </script>
 
